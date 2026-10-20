@@ -3055,7 +3055,7 @@ void CMenus::RenderSettingsTClientConfigs(CUIRect MainView)
 	s_ScrollRegion.End();
 }
 
-void CMenus::RenderSettingsTClientExtras(CUIRect MainView)
+void CMenus::RenderSettingsTClientExtrasFeatures(CUIRect MainView)
 {
 	CUIRect Column, LeftView, RightView, Button, Label;
 
@@ -3211,6 +3211,338 @@ void CMenus::RenderSettingsTClientExtras(CUIRect MainView)
 	s_SectionBoxes.back().h = Column.y - s_SectionBoxes.back().y;
 
 	// ***** END OF PAGE ***** //
+	RightView = Column;
+
+	CUIRect ScrollRegion;
+	ScrollRegion.x = MainView.x;
+	ScrollRegion.y = std::max(LeftView.y, RightView.y) + MarginSmall * 2.0f;
+	ScrollRegion.w = MainView.w;
+	ScrollRegion.h = 0.0f;
+	s_ScrollRegion.AddRect(ScrollRegion);
+	s_ScrollRegion.End();
+}
+
+void CMenus::RenderSettingsTClientExtras(CUIRect MainView)
+{
+	enum
+	{
+		EXTRAS_SUB_FEATURES = 0,
+		EXTRAS_SUB_BINDS,
+		EXTRAS_SUB_ANTIPING,
+		NUM_EXTRAS_SUBS
+	};
+	static int s_CurSub = EXTRAS_SUB_FEATURES;
+	static CButtonContainer s_aSubTabs[NUM_EXTRAS_SUBS] = {};
+	const char *apNames[NUM_EXTRAS_SUBS] = {TCLocalize("Features"), TCLocalize("Binds"), TCLocalize("Antiping")};
+
+	CUIRect TabBar, Button;
+	MainView.HSplitTop(LineSize, &TabBar, &MainView);
+	TabBar.VSplitLeft(TabBar.w * 0.6f, &TabBar, nullptr); // keep the sub tabs compact
+	const float TabWidth = TabBar.w / NUM_EXTRAS_SUBS;
+	for(int Sub = 0; Sub < NUM_EXTRAS_SUBS; ++Sub)
+	{
+		TabBar.VSplitLeft(TabWidth, &Button, &TabBar);
+		const int Corners = Sub == 0 ? IGraphics::CORNER_L : Sub == NUM_EXTRAS_SUBS - 1 ? IGraphics::CORNER_R :
+												   IGraphics::CORNER_NONE;
+		if(DoButton_MenuTab(&s_aSubTabs[Sub], apNames[Sub], s_CurSub == Sub, &Button, Corners, nullptr, nullptr, nullptr, nullptr, 4.0f))
+			s_CurSub = Sub;
+	}
+	MainView.HSplitTop(Margin, nullptr, &MainView);
+
+	if(s_CurSub == EXTRAS_SUB_FEATURES)
+		RenderSettingsTClientExtrasFeatures(MainView);
+	else if(s_CurSub == EXTRAS_SUB_BINDS)
+		RenderSettingsTClientExtrasBinds(MainView);
+	else
+		RenderSettingsTClientExtrasAntiping(MainView);
+}
+
+// Compound binds that cannot be expressed with a single plain command.
+// Every command used here exists in the client (checked against the source).
+struct SExtrasBind
+{
+	const char *m_pTitle;
+	const char *m_pCommand;
+	const char *m_pHint;
+};
+
+static const SExtrasBind gs_aExtrasBindsDummy[] = {
+	{"Hook + dummy hammer (hold)", "+hook;+toggle cl_dummy_hammer 1 0", "Dummy hammers while you hold hook (hammerfly). Releases both on key up."},
+	{"Fire + dummy hammer (hold)", "+fire;+toggle cl_dummy_hammer 1 0", "Deep fly: you shoot and the dummy hammers while the key is held."},
+	{"Dummy copies my moves (hold)", "+toggle cl_dummy_copy_moves 1 0", "Dummy mirrors your inputs only while the key is held."},
+	{"Switch to dummy, hammerfly off", "cl_dummy_hammer 0; toggle cl_dummy 0 1", "Swap control and make sure the dummy stops hammering."},
+	{"Kill both tees", "cl_dummy 1; kill; cl_dummy 0; kill", "Kills the dummy and the main tee in one press."},
+};
+
+static const SExtrasBind gs_aExtrasBindsTeam[] = {
+	{"Dummy joins team 1 and locks, then you join", "cl_dummy 1; say /team 1; say /lock; cl_dummy 0; say /team 1", "Needs the dummy to be connected already."},
+	{"Same, fall back to team 2 if 1 is taken", "cl_dummy 1; say /team 1; say /team 2; say /lock; cl_dummy 0; say /team 1; say /team 2", "Needs the dummy to be connected already."},
+	{"Both tees leave the team (team 0)", "cl_dummy 1; say /team 0; cl_dummy 0; say /team 0", "Moves the dummy and the main tee back to team 0."},
+};
+
+void CMenus::RenderSettingsTClientExtrasBinds(CUIRect MainView)
+{
+	static CScrollRegion s_ScrollRegion;
+	CScrollRegionParams ScrollParams;
+	ScrollParams.m_ScrollUnit = 60.0f;
+	ScrollParams.m_ForceShowScrollbar = true;
+	ScrollParams.m_ScrollbarMargin = 5.0f;
+	s_ScrollRegion.Begin(&MainView, &ScrollParams);
+
+	MainView.VSplitRight(5.0f, &MainView, nullptr);
+	MainView.VSplitLeft(5.0f, nullptr, &MainView);
+
+	const float RowHeight = 34.0f;
+	static CButtonContainer s_aReaders[16], s_aClears[16];
+	int Index = 0;
+
+	const auto DoSection = [&](const char *pHeadline, const SExtrasBind *pBinds, int Count) {
+		CUIRect Label, Row;
+		MainView.HSplitTop(HeadlineHeight, &Label, &MainView);
+		if(s_ScrollRegion.AddRect(Label))
+			Ui()->DoLabel(&Label, pHeadline, HeadlineFontSize, TEXTALIGN_ML);
+		MainView.HSplitTop(MarginSmall, nullptr, &MainView);
+
+		for(int i = 0; i < Count; i++, Index++)
+		{
+			MainView.HSplitTop(RowHeight, &Row, &MainView);
+			MainView.HSplitTop(MarginExtraSmall, nullptr, &MainView);
+			if(!s_ScrollRegion.AddRect(Row))
+				continue;
+			Row.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, 0.2f), IGraphics::CORNER_ALL, 6.0f);
+			Row.Margin(4.0f, &Row);
+
+			CUIRect Text, Key, Title, Hint;
+			Row.VSplitLeft(Row.w * 0.62f, &Text, &Key);
+			Key.VSplitLeft(MarginSmall, nullptr, &Key);
+			Text.HSplitTop(Text.h * 0.55f, &Title, &Hint);
+			Ui()->DoLabel(&Title, TCLocalize(pBinds[i].m_pTitle), FontSize, TEXTALIGN_ML);
+			TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.55f);
+			Ui()->DoLabel(&Hint, TCLocalize(pBinds[i].m_pHint), FontSize * 0.7f, TEXTALIGN_ML);
+			TextRender()->TextColor(TextRender()->DefaultTextColor());
+
+			// Find the key currently bound to this exact command
+			CBindSlot Bind(0, 0);
+			for(int Mod = 0; Mod < KeyModifier::COMBINATION_COUNT; Mod++)
+			{
+				for(int KeyId = 0; KeyId < KEY_LAST; KeyId++)
+				{
+					const char *pBind = GameClient()->m_Binds.Get(KeyId, Mod);
+					if(pBind[0] && str_comp(pBind, pBinds[i].m_pCommand) == 0)
+					{
+						Bind.m_Key = KeyId;
+						Bind.m_ModifierMask = Mod;
+						break;
+					}
+				}
+			}
+			const auto Result = GameClient()->m_KeyBinder.DoKeyReader(&s_aReaders[Index], &s_aClears[Index], &Key, Bind, false);
+			if(Result.m_Bind != Bind)
+			{
+				if(Bind.m_Key != KEY_UNKNOWN)
+					GameClient()->m_Binds.Bind(Bind.m_Key, "", false, Bind.m_ModifierMask);
+				if(Result.m_Bind.m_Key != KEY_UNKNOWN)
+					GameClient()->m_Binds.Bind(Result.m_Bind.m_Key, pBinds[i].m_pCommand, false, Result.m_Bind.m_ModifierMask);
+			}
+		}
+		MainView.HSplitTop(MarginBetweenViews, nullptr, &MainView);
+	};
+
+	MainView.HSplitTop(Margin, nullptr, &MainView);
+	DoSection(TCLocalize("Dummy"), gs_aExtrasBindsDummy, (int)std::size(gs_aExtrasBindsDummy));
+	DoSection(TCLocalize("Teams"), gs_aExtrasBindsTeam, (int)std::size(gs_aExtrasBindsTeam));
+
+	CUIRect Note;
+	MainView.HSplitTop(LineSize * 1.5f, &Note, &MainView);
+	if(s_ScrollRegion.AddRect(Note))
+		Ui()->DoLabel(&Note, TCLocalize("Binds are stored like normal binds, so they also show up in the Controls page and in your config."), FontSize * 0.8f, TEXTALIGN_ML);
+
+	s_ScrollRegion.End();
+}
+
+namespace
+{
+struct SAntipingPreset
+{
+	const char *m_pName;
+	const char *m_pHint;
+	int m_Antiping;
+	int m_Players; // cl_antiping_players
+	int m_Preinput;
+	int m_Smooth;
+	int m_Improved; // tc_antiping_improved
+	int m_StableDirection;
+	int m_NegativeBuffer;
+	int m_Uncertainty; // tc_antiping_uncertainty_scale
+	int m_Margin; // cl_prediction_margin
+	int m_FastInput;
+	int m_FastInputAmount;
+	int m_RemoveAnti;
+};
+
+// Starting points, not magic values: tune with the sliders below.
+const SAntipingPreset gs_aAntipingPresets[] = {
+	{"Standard (~50 ms)", "Default-like antiping for stable low ping", 1, 1, 1, 0, 0, 1, 0, 150, 10, 0, 20, 0},
+	{"High ping (~90 ms)", "Improved smoothing, fast input and a little margin for 80-100 ms", 1, 1, 1, 0, 1, 1, 0, 150, 15, 1, 20, 0},
+	{"Unstable ping", "More conservative prediction and larger margin when ping jumps", 1, 2, 1, 0, 1, 1, 1, 200, 30, 1, 20, 0},
+	{"Gores / freeze", "Conservative prediction near freeze, less overshoot", 1, 3, 1, 0, 1, 1, 1, 150, 15, 0, 20, 1},
+	{"Antiping off", "Plain prediction like vanilla DDNet", 0, 1, 1, 0, 0, 1, 0, 150, 10, 0, 20, 0},
+};
+} // namespace
+
+void CMenus::RenderSettingsTClientExtrasAntiping(CUIRect MainView)
+{
+	CUIRect Column, LeftView, RightView, Button, Label;
+
+	static CScrollRegion s_ScrollRegion;
+	CScrollRegionParams ScrollParams;
+	ScrollParams.m_ScrollUnit = 60.0f;
+	ScrollParams.m_ForceShowScrollbar = true;
+	ScrollParams.m_ScrollbarMargin = 5.0f;
+	s_ScrollRegion.Begin(&MainView, &ScrollParams);
+
+	static std::vector<CUIRect> s_SectionBoxes;
+	const float ScrollOffset = MainView.y;
+	static float s_PrevScrollOffset = 0.0f;
+
+	MainView.VSplitRight(5.0f, &MainView, nullptr);
+	MainView.VSplitLeft(5.0f, nullptr, &MainView);
+	MainView.VSplitMid(&LeftView, &RightView, MarginBetweenViews);
+	LeftView.VSplitLeft(MarginSmall, nullptr, &LeftView);
+	RightView.VSplitRight(MarginSmall, &RightView, nullptr);
+
+	for(CUIRect &Section : s_SectionBoxes)
+	{
+		float Padding = MarginBetweenViews * 0.6666f;
+		Section.w += Padding;
+		Section.h += Padding;
+		Section.x -= Padding * 0.5f;
+		Section.y -= Padding * 0.5f;
+		Section.y -= s_PrevScrollOffset - ScrollOffset;
+		Section.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, 0.25f), IGraphics::CORNER_ALL, 10.0f);
+	}
+	s_PrevScrollOffset = ScrollOffset;
+	s_SectionBoxes.clear();
+
+	// ***** Presets ***** //
+	Column = LeftView;
+	Column.HSplitTop(Margin, nullptr, &Column);
+	s_SectionBoxes.push_back(Column);
+	Column.HSplitTop(HeadlineHeight, &Label, &Column);
+	Ui()->DoLabel(&Label, TCLocalize("Presets"), HeadlineFontSize, TEXTALIGN_ML);
+	Column.HSplitTop(MarginSmall, nullptr, &Column);
+
+	// Current ping
+	int Ping = -1;
+	const int LocalId = GameClient()->m_Snap.m_LocalClientId;
+	if(LocalId >= 0 && GameClient()->m_Snap.m_apPlayerInfos[LocalId])
+		Ping = GameClient()->m_Snap.m_apPlayerInfos[LocalId]->m_Latency;
+	char aBuf[128];
+	if(Ping >= 0)
+		str_format(aBuf, sizeof(aBuf), TCLocalize("Your ping: %d ms"), Ping);
+	else
+		str_copy(aBuf, TCLocalize("Your ping: join a server to see it"));
+	Column.HSplitTop(LineSize, &Label, &Column);
+	Ui()->DoLabel(&Label, aBuf, FontSize, TEXTALIGN_ML);
+
+	const auto ApplyPreset = [](const SAntipingPreset &P) {
+		g_Config.m_ClAntiPing = P.m_Antiping;
+		g_Config.m_ClAntiPingPlayers = P.m_Players;
+		g_Config.m_ClAntiPingPreInput = P.m_Preinput;
+		g_Config.m_ClAntiPingSmooth = P.m_Improved ? 0 : P.m_Smooth; // smooth and improved are mutually exclusive
+		g_Config.m_TcAntiPingImproved = P.m_Improved;
+		g_Config.m_TcAntiPingStableDirection = P.m_StableDirection;
+		g_Config.m_TcAntiPingNegativeBuffer = P.m_NegativeBuffer;
+		g_Config.m_TcAntiPingUncertaintyScale = P.m_Uncertainty;
+		g_Config.m_ClPredictionMargin = P.m_Margin;
+		g_Config.m_TcFastInput = P.m_FastInput;
+		g_Config.m_TcFastInputAmount = P.m_FastInputAmount;
+		g_Config.m_TcRemoveAnti = P.m_RemoveAnti;
+	};
+
+	static CButtonContainer s_AutoButton;
+	Column.HSplitTop(LineSize + 4.0f, &Button, &Column);
+	Button.HMargin(2.0f, &Button);
+	if(DoButton_Menu(&s_AutoButton, TCLocalize("Auto-pick by current ping"), 0, &Button) && Ping >= 0)
+		ApplyPreset(Ping < 70 ? gs_aAntipingPresets[0] : gs_aAntipingPresets[1]);
+	Column.HSplitTop(MarginExtraSmall, nullptr, &Column);
+
+	static CButtonContainer s_aPresetButtons[std::size(gs_aAntipingPresets)];
+	for(size_t i = 0; i < std::size(gs_aAntipingPresets); i++)
+	{
+		Column.HSplitTop(LineSize + 4.0f, &Button, &Column);
+		Button.HMargin(2.0f, &Button);
+		if(DoButton_Menu(&s_aPresetButtons[i], TCLocalize(gs_aAntipingPresets[i].m_pName), 0, &Button))
+			ApplyPreset(gs_aAntipingPresets[i]);
+		Column.HSplitTop(LineSize * 0.8f, &Label, &Column);
+		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.55f);
+		Ui()->DoLabel(&Label, TCLocalize(gs_aAntipingPresets[i].m_pHint), FontSize * 0.75f, TEXTALIGN_ML);
+		TextRender()->TextColor(TextRender()->DefaultTextColor());
+	}
+	Column.HSplitTop(LineSize, &Label, &Column);
+	Ui()->DoLabel(&Label, TCLocalize("Presets change the settings on the right, you can fine-tune after."), FontSize * 0.75f, TEXTALIGN_ML);
+	s_SectionBoxes.back().h = Column.y - s_SectionBoxes.back().y;
+	LeftView = Column;
+
+	// ***** Settings ***** //
+	Column = RightView;
+	Column.HSplitTop(Margin, nullptr, &Column);
+	s_SectionBoxes.push_back(Column);
+	Column.HSplitTop(HeadlineHeight, &Label, &Column);
+	Ui()->DoLabel(&Label, TCLocalize("Antiping"), HeadlineFontSize, TEXTALIGN_ML);
+	Column.HSplitTop(MarginSmall, nullptr, &Column);
+
+	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ClAntiPing, TCLocalize("Enable antiping"), &g_Config.m_ClAntiPing, &Column, LineSize);
+	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ClAntiPingPreInput, TCLocalize("Use preinputs for other players"), &g_Config.m_ClAntiPingPreInput, &Column, LineSize);
+	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ClAntiPingGrenade, TCLocalize("Predict grenades"), &g_Config.m_ClAntiPingGrenade, &Column, LineSize);
+	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ClAntiPingWeapons, TCLocalize("Predict weapon projectiles"), &g_Config.m_ClAntiPingWeapons, &Column, LineSize);
+	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ClAntiPingGunfire, TCLocalize("Predict gunfire"), &g_Config.m_ClAntiPingGunfire, &Column, LineSize);
+	Column.HSplitTop(LineSize, &Button, &Column);
+	Ui()->DoScrollbarOption(&g_Config.m_ClAntiPingPlayers, &g_Config.m_ClAntiPingPlayers, &Button, TCLocalize("Players (1 all, 2 interaction, 3 +frozen)"), 0, 3);
+	Column.HSplitTop(LineSize, &Button, &Column);
+	Ui()->DoScrollbarOption(&g_Config.m_ClAntiPingLimit, &g_Config.m_ClAntiPingLimit, &Button, TCLocalize("Antiping delay limit (0 = off)"), 0, 500, &CUi::ms_LinearScrollbarScale, CUi::SCROLLBAR_OPTION_NOCLAMPVALUE, "ms");
+	Column.HSplitTop(LineSize, &Button, &Column);
+	Ui()->DoScrollbarOption(&g_Config.m_ClPredictionMargin, &g_Config.m_ClPredictionMargin, &Button, TCLocalize("Prediction margin"), 10, 75, &CUi::ms_LinearScrollbarScale, CUi::SCROLLBAR_OPTION_NOCLAMPVALUE, "ms");
+
+	Column.HSplitTop(MarginSmall, nullptr, &Column);
+	// Smoothing: classic and improved are mutually exclusive
+	{
+		CUIRect Check;
+		Column.HSplitTop(LineSize, &Check, &Column);
+		if(DoButton_CheckBox(&g_Config.m_ClAntiPingSmooth, TCLocalize("Smooth other players (classic)"), g_Config.m_ClAntiPingSmooth, &Check))
+		{
+			g_Config.m_ClAntiPingSmooth ^= 1;
+			if(g_Config.m_ClAntiPingSmooth)
+				g_Config.m_TcAntiPingImproved = 0;
+		}
+		Column.HSplitTop(MarginExtraSmall, nullptr, &Column);
+		Column.HSplitTop(LineSize, &Check, &Column);
+		if(DoButton_CheckBox(&g_Config.m_TcAntiPingImproved, TCLocalize("Improved smoothing (TClient)"), g_Config.m_TcAntiPingImproved, &Check))
+		{
+			g_Config.m_TcAntiPingImproved ^= 1;
+			if(g_Config.m_TcAntiPingImproved)
+				g_Config.m_ClAntiPingSmooth = 0;
+		}
+		Column.HSplitTop(MarginExtraSmall, nullptr, &Column);
+	}
+	if(g_Config.m_TcAntiPingImproved)
+	{
+		DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcAntiPingStableDirection, TCLocalize("Optimistic along stable axis"), &g_Config.m_TcAntiPingStableDirection, &Column, LineSize);
+		DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcAntiPingNegativeBuffer, TCLocalize("Negative buffer (helps in gores)"), &g_Config.m_TcAntiPingNegativeBuffer, &Column, LineSize);
+		Column.HSplitTop(LineSize, &Button, &Column);
+		Ui()->DoScrollbarOption(&g_Config.m_TcAntiPingUncertaintyScale, &g_Config.m_TcAntiPingUncertaintyScale, &Button, TCLocalize("Uncertainty scale"), 25, 400, &CUi::ms_LinearScrollbarScale, 0, "%");
+	}
+	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcRemoveAnti, TCLocalize("Reduce antiping in freeze"), &g_Config.m_TcRemoveAnti, &Column, LineSize);
+
+	Column.HSplitTop(MarginSmall, nullptr, &Column);
+	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcFastInput, TCLocalize("Fast input (use input before next tick)"), &g_Config.m_TcFastInput, &Column, LineSize);
+	if(g_Config.m_TcFastInput)
+	{
+		Column.HSplitTop(LineSize, &Button, &Column);
+		Ui()->DoScrollbarOption(&g_Config.m_TcFastInputAmount, &g_Config.m_TcFastInputAmount, &Button, TCLocalize("Fast input amount"), 1, 40, &CUi::ms_LinearScrollbarScale, CUi::SCROLLBAR_OPTION_NOCLAMPVALUE, "ms");
+		DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcFastInputOthers, TCLocalize("Apply to other tees"), &g_Config.m_TcFastInputOthers, &Column, LineSize);
+	}
+	s_SectionBoxes.back().h = Column.y - s_SectionBoxes.back().y;
 	RightView = Column;
 
 	CUIRect ScrollRegion;
