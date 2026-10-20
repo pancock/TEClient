@@ -15,7 +15,6 @@
 #include <game/client/components/menus.h>
 #include <game/client/components/sounds.h>
 #include <game/client/gameclient.h>
-#include <game/localization.h>
 
 #include <algorithm>
 
@@ -25,9 +24,9 @@
 
 void CExtras::OnConsoleInit()
 {
-	Console()->Register("tc_ah_swap", "", CFGFLAG_CLIENT, ConSwapStrong, this, "Swap which tee (main/dummy) must have strong hook");
-	Console()->Register("tc_ah_toggle", "", CFGFLAG_CLIENT, ConToggleAutoStrong, this, "Toggle auto strong hook");
-	Console()->Register("tc_ak_toggle", "", CFGFLAG_CLIENT, ConToggleAutoKill, this, "Toggle auto kill on freeze");
+	Console()->Register("tc_ah_swap", "", CFGFLAG_CLIENT, ConSwapStrong, this, "Сменить, у кого должен быть strong hook (основной/дамми)");
+	Console()->Register("tc_ah_toggle", "", CFGFLAG_CLIENT, ConToggleAutoStrong, this, "Вкл/выкл авто strong hook");
+	Console()->Register("tc_ak_toggle", "", CFGFLAG_CLIENT, ConToggleAutoKill, this, "Вкл/выкл автокилл при фризе");
 }
 
 void CExtras::ConSwapStrong(IConsole::IResult *pResult, void *pUserData)
@@ -36,7 +35,7 @@ void CExtras::ConSwapStrong(IConsole::IResult *pResult, void *pUserData)
 	g_Config.m_TcAhStrong ^= 1;
 	pSelf->m_FixTries = 0;
 	char aBuf[128];
-	str_format(aBuf, sizeof(aBuf), TCLocalize("Strong hook: %s"), g_Config.m_TcAhStrong ? TCLocalize("dummy") : TCLocalize("main tee"));
+	str_format(aBuf, sizeof(aBuf), "Strong hook у: %s", g_Config.m_TcAhStrong ? "дамми" : "основного тии");
 	pSelf->GameClient()->m_Chat.Echo(aBuf);
 }
 
@@ -45,14 +44,14 @@ void CExtras::ConToggleAutoStrong(IConsole::IResult *pResult, void *pUserData)
 	CExtras *pSelf = (CExtras *)pUserData;
 	g_Config.m_TcAhEnable ^= 1;
 	pSelf->m_FixTries = 0;
-	pSelf->GameClient()->m_Chat.Echo(g_Config.m_TcAhEnable ? TCLocalize("Auto strong hook: on") : TCLocalize("Auto strong hook: off"));
+	pSelf->GameClient()->m_Chat.Echo(g_Config.m_TcAhEnable ? "Авто strong hook: вкл" : "Авто strong hook: выкл");
 }
 
 void CExtras::ConToggleAutoKill(IConsole::IResult *pResult, void *pUserData)
 {
 	CExtras *pSelf = (CExtras *)pUserData;
 	g_Config.m_TcAkEnable ^= 1;
-	pSelf->GameClient()->m_Chat.Echo(g_Config.m_TcAkEnable ? TCLocalize("Auto kill: on") : TCLocalize("Auto kill: off"));
+	pSelf->GameClient()->m_Chat.Echo(g_Config.m_TcAkEnable ? "Автокилл: вкл" : "Автокилл: выкл");
 }
 
 // ---------------------------------------------------------------------------
@@ -222,6 +221,8 @@ void CExtras::UpdateAutoKill()
 
 		const bool Alive = Connected && Id >= 0 && GameClient()->m_Snap.m_aCharacters[Id].m_Active;
 		const bool Frozen = Alive && IsFrozen(Conn);
+		m_aPresent[Conn] = Alive;
+		m_aApplies[Conn] = Applies;
 
 		if(Frozen && !m_aFrozen[Conn])
 			m_aFrozenSince[Conn] = Now;
@@ -237,7 +238,37 @@ void CExtras::UpdateAutoKill()
 
 		SendKillTo(Conn);
 		m_aLastAutoKill[Conn] = Now;
+		m_aKillsSent[Conn]++;
 	}
+}
+
+CExtras::SAutoKillInfo CExtras::AutoKillInfo(int Conn) const
+{
+	SAutoKillInfo Info;
+	Info.m_Present = m_aPresent[Conn];
+	Info.m_Applies = m_aApplies[Conn];
+	Info.m_Frozen = m_aFrozen[Conn];
+	Info.m_FrozenFor = m_aFrozen[Conn] ? Client()->LocalTime() - m_aFrozenSince[Conn] : 0.0f;
+	Info.m_KillsSent = m_aKillsSent[Conn];
+	return Info;
+}
+
+CExtras::SFriendInfo CExtras::FriendInfo() const
+{
+	SFriendInfo Info;
+	Info.m_ListSize = GameClient()->Friends()->NumFriends();
+	for(bool Present : m_aFriendPresent)
+		Info.m_InServer += Present ? 1 : 0;
+	Info.m_Scanning = m_ScanState == SCAN_WAITING;
+	Info.m_SinceScan = m_LastScan > -500.0f ? Client()->LocalTime() - m_LastScan : -1.0f;
+	Info.m_ScanServers = m_LastScanServers;
+	Info.m_ScanFriends = m_LastScanFriends;
+	return Info;
+}
+
+void CExtras::TestToast()
+{
+	AddFriendToast("Тест уведомления", "Так будет выглядеть уведомление о друге");
 }
 
 // ---------------------------------------------------------------------------
@@ -284,7 +315,7 @@ void CExtras::UpdateFriendsInServer()
 			{
 				char aText[128];
 				str_format(aText, sizeof(aText), "%s  -  %s", Data.m_aName, GameClient()->Map()->BaseName());
-				AddFriendToast(TCLocalize("Friend joined"), aText);
+				AddFriendToast("Друг зашёл на сервер", aText);
 			}
 		}
 		m_aFriendPresent[i] = Friend;
@@ -306,7 +337,7 @@ void CExtras::UpdateFriendsInServer()
 					Names += ", ";
 				Names += Name;
 			}
-			AddFriendToast(TCLocalize("Friends on this server"), Names.c_str());
+			AddFriendToast("Друзья на сервере", Names.c_str());
 		}
 		m_vExistingFriends.clear();
 	}
@@ -359,6 +390,9 @@ void CExtras::EvaluateServerList()
 		}
 	}
 
+	m_LastScanServers = pBrowser->NumServers();
+	m_LastScanFriends = (int)Current.size();
+
 	// Never announce from an empty list (list not loaded yet)
 	if(pBrowser->NumServers() == 0)
 		return;
@@ -378,7 +412,7 @@ void CExtras::EvaluateServerList()
 
 			char aText[256];
 			str_format(aText, sizeof(aText), "%s  -  %s (%s)", Name.c_str(), Location.m_Server.c_str(), Location.m_Map.c_str());
-			AddFriendToast(TCLocalize("Friend online"), aText);
+			AddFriendToast("Друг в сети", aText);
 		}
 	}
 	m_GlobalOnline = std::move(Current);

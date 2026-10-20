@@ -342,7 +342,7 @@ void CMenus::RenderSettingsTClient(CUIRect MainView)
 		TCLocalize("War List"),
 		TCLocalize("Chat Binds"),
 		TCLocalize("Status Bar"),
-		TCLocalize("Extras"),
+		"Допы",
 		TCLocalize("Info")};
 
 	for(int Tab = 0; Tab < NUMBER_OF_TCLIENT_TABS; ++Tab)
@@ -2290,7 +2290,7 @@ void CMenus::RenderSettingsTClientInfo(CUIRect MainView)
 		TCLocalize("War List"),
 		TCLocalize("Chat Binds"),
 		TCLocalize("Status Bar"),
-		TCLocalize("Extras"),
+		"Допы",
 		TCLocalize("Info")};
 	static int s_aShowTabs[NUMBER_OF_TCLIENT_TABS] = {};
 	for(int i = 0; i < NUMBER_OF_TCLIENT_TABS - 1; ++i)
@@ -3097,52 +3097,52 @@ void CMenus::RenderSettingsTClientExtrasFeatures(CUIRect MainView)
 	Column.HSplitTop(Margin, nullptr, &Column);
 	s_SectionBoxes.push_back(Column);
 	Column.HSplitTop(HeadlineHeight, &Label, &Column);
-	Ui()->DoLabel(&Label, TCLocalize("Auto Strong Hook (dummy)"), HeadlineFontSize, TEXTALIGN_ML);
+	Ui()->DoLabel(&Label, "Авто strong hook (дамми)", HeadlineFontSize, TEXTALIGN_ML);
 	Column.HSplitTop(MarginSmall, nullptr, &Column);
 
-	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcAhEnable, TCLocalize("Keep chosen tee strong automatically"), &g_Config.m_TcAhEnable, &Column, LineSize);
+	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcAhEnable, "Автоматически держать выбранного тии сильным", &g_Config.m_TcAhEnable, &Column, LineSize);
 	{
 		static std::vector<const char *> s_StrongNames;
-		s_StrongNames = {TCLocalize("Main tee", "Strong hook"), TCLocalize("Dummy", "Strong hook")};
+		s_StrongNames = {"Основной тии", "Дамми"};
 		static CUi::SDropDownState s_StrongState;
 		static CScrollRegion s_StrongScrollRegion;
 		s_StrongState.m_SelectionPopupContext.m_pScrollRegion = &s_StrongScrollRegion;
 		CUIRect DropDownRect;
 		Column.HSplitTop(LineSize, &DropDownRect, &Column);
 		DropDownRect.VSplitLeft(150.0f, &Label, &DropDownRect);
-		Ui()->DoLabel(&Label, TCLocalize("Strong hook belongs to: "), FontSize, TEXTALIGN_ML);
+		Ui()->DoLabel(&Label, "Strong hook у: ", FontSize, TEXTALIGN_ML);
 		g_Config.m_TcAhStrong = Ui()->DoDropDown(&DropDownRect, g_Config.m_TcAhStrong, s_StrongNames.data(), s_StrongNames.size(), s_StrongState);
 		Column.HSplitTop(MarginExtraSmall, nullptr, &Column);
 	}
 	Column.HSplitTop(LineSize, &Button, &Column);
-	Ui()->DoScrollbarOption(&g_Config.m_TcAhCooldown, &g_Config.m_TcAhCooldown, &Button, TCLocalize("Retry delay"), 200, 5000, &CUi::ms_LinearScrollbarScale, CUi::SCROLLBAR_OPTION_NOCLAMPVALUE, "ms");
+	Ui()->DoScrollbarOption(&g_Config.m_TcAhCooldown, &g_Config.m_TcAhCooldown, &Button, "Задержка между попытками", 200, 5000, &CUi::ms_LinearScrollbarScale, CUi::SCROLLBAR_OPTION_NOCLAMPVALUE, "ms");
 	Column.HSplitTop(LineSize, &Button, &Column);
-	Ui()->DoScrollbarOption(&g_Config.m_TcAhMaxTries, &g_Config.m_TcAhMaxTries, &Button, TCLocalize("Max attempts"), 1, 20);
+	Ui()->DoScrollbarOption(&g_Config.m_TcAhMaxTries, &g_Config.m_TcAhMaxTries, &Button, "Макс. попыток", 1, 20);
 	Column.HSplitTop(LineSize, &Button, &Column);
-	Ui()->DoScrollbarOption(&g_Config.m_TcAhWindow, &g_Config.m_TcAhWindow, &Button, TCLocalize("Only after respawn (0 = always)"), 0, 60, &CUi::ms_LinearScrollbarScale, 0, "s");
-	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcAhSkipTeam, TCLocalize("Do not act inside a team (kill resets the team)"), &g_Config.m_TcAhSkipTeam, &Column, LineSize);
+	Ui()->DoScrollbarOption(&g_Config.m_TcAhWindow, &g_Config.m_TcAhWindow, &Button, "Только после респавна (0 = всегда)", 0, 60, &CUi::ms_LinearScrollbarScale, 0, "s");
+	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcAhSkipTeam, "Не действовать в команде (килл может сбросить команду)", &g_Config.m_TcAhSkipTeam, &Column, LineSize);
 
 	static CButtonContainer s_ReaderSwap, s_ClearSwap;
-	DoLine_KeyReader(Column, s_ReaderSwap, s_ClearSwap, TCLocalize("Swap strong/weak tee key"), "tc_ah_swap");
+	DoLine_KeyReader(Column, s_ReaderSwap, s_ClearSwap, "Клавиша: сменить, кто strong / weak", "tc_ah_swap");
 	static CButtonContainer s_ReaderAhToggle, s_ClearAhToggle;
-	DoLine_KeyReader(Column, s_ReaderAhToggle, s_ClearAhToggle, TCLocalize("Toggle auto strong key"), "tc_ah_toggle");
+	DoLine_KeyReader(Column, s_ReaderAhToggle, s_ClearAhToggle, "Клавиша: вкл/выкл авто strong hook", "tc_ah_toggle");
 
 	{
 		Column.HSplitTop(LineSize, &Label, &Column);
-		const char *pStatus = TCLocalize("Status: off");
+		const char *pStatus = "Статус: выключено";
 		ColorRGBA StatusColor(1.0f, 1.0f, 1.0f, 0.6f);
 		switch(GameClient()->m_Extras.StrongState())
 		{
 		case CExtras::STRONG_OK:
-			pStatus = TCLocalize("Status: correct tee is strong");
+			pStatus = "Статус: strong у нужного тии";
 			StatusColor = ColorRGBA(0.3f, 0.85f, 0.45f, 1.0f);
 			break;
 		case CExtras::STRONG_WRONG:
-			pStatus = TCLocalize("Status: wrong tee is strong");
+			pStatus = "Статус: strong не у того тии";
 			StatusColor = ColorRGBA(0.95f, 0.45f, 0.35f, 1.0f);
 			break;
 		case CExtras::STRONG_UNKNOWN:
-			pStatus = TCLocalize("Status: waiting for both tees");
+			pStatus = "Статус: ждём обоих тии";
 			break;
 		default:
 			break;
@@ -3157,18 +3157,18 @@ void CMenus::RenderSettingsTClientExtrasFeatures(CUIRect MainView)
 	Column.HSplitTop(MarginBetweenSections, nullptr, &Column);
 	s_SectionBoxes.push_back(Column);
 	Column.HSplitTop(HeadlineHeight, &Label, &Column);
-	Ui()->DoLabel(&Label, TCLocalize("Auto Kill on Freeze"), HeadlineFontSize, TEXTALIGN_ML);
+	Ui()->DoLabel(&Label, "Автокилл при фризе", HeadlineFontSize, TEXTALIGN_ML);
 	Column.HSplitTop(MarginSmall, nullptr, &Column);
 
-	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcAkEnable, TCLocalize("Kill automatically when frozen"), &g_Config.m_TcAkEnable, &Column, LineSize);
+	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcAkEnable, "Убивать автоматически во фризе", &g_Config.m_TcAkEnable, &Column, LineSize);
 	Column.HSplitTop(LineSize, &Button, &Column);
 	if(g_Config.m_TcAkDelay == 0)
-		Ui()->DoScrollbarOption(&g_Config.m_TcAkDelay, &g_Config.m_TcAkDelay, &Button, TCLocalize("Kill delay"), 0, 10000, &CUi::ms_LinearScrollbarScale, CUi::SCROLLBAR_OPTION_NOCLAMPVALUE, "ms (instant)");
+		Ui()->DoScrollbarOption(&g_Config.m_TcAkDelay, &g_Config.m_TcAkDelay, &Button, "Задержка килла", 0, 10000, &CUi::ms_LinearScrollbarScale, CUi::SCROLLBAR_OPTION_NOCLAMPVALUE, "ms (instant)");
 	else
-		Ui()->DoScrollbarOption(&g_Config.m_TcAkDelay, &g_Config.m_TcAkDelay, &Button, TCLocalize("Kill delay"), 0, 10000, &CUi::ms_LinearScrollbarScale, CUi::SCROLLBAR_OPTION_NOCLAMPVALUE, "ms");
+		Ui()->DoScrollbarOption(&g_Config.m_TcAkDelay, &g_Config.m_TcAkDelay, &Button, "Задержка килла", 0, 10000, &CUi::ms_LinearScrollbarScale, CUi::SCROLLBAR_OPTION_NOCLAMPVALUE, "ms");
 	{
 		static std::vector<const char *> s_TargetNames;
-		s_TargetNames = {TCLocalize("Controlled tee", "Auto kill"), TCLocalize("Main tee", "Auto kill"), TCLocalize("Dummy", "Auto kill"), TCLocalize("Both tees", "Auto kill")};
+		s_TargetNames = {"Управляемый тии", "Основной тии", "Дамми", "Оба тии"};
 		static CUi::SDropDownState s_TargetState;
 		static CScrollRegion s_TargetScrollRegion;
 		s_TargetState.m_SelectionPopupContext.m_pScrollRegion = &s_TargetScrollRegion;
@@ -3176,12 +3176,31 @@ void CMenus::RenderSettingsTClientExtrasFeatures(CUIRect MainView)
 		Column.HSplitTop(MarginExtraSmall, nullptr, &Column);
 		Column.HSplitTop(LineSize, &DropDownRect, &Column);
 		DropDownRect.VSplitLeft(150.0f, &Label, &DropDownRect);
-		Ui()->DoLabel(&Label, TCLocalize("Applies to: "), FontSize, TEXTALIGN_ML);
+		Ui()->DoLabel(&Label, "Действует на: ", FontSize, TEXTALIGN_ML);
 		g_Config.m_TcAkTarget = Ui()->DoDropDown(&DropDownRect, g_Config.m_TcAkTarget, s_TargetNames.data(), s_TargetNames.size(), s_TargetState);
 		Column.HSplitTop(MarginExtraSmall, nullptr, &Column);
 	}
 	static CButtonContainer s_ReaderAk, s_ClearAk;
-	DoLine_KeyReader(Column, s_ReaderAk, s_ClearAk, TCLocalize("Toggle auto kill key"), "tc_ak_toggle");
+	DoLine_KeyReader(Column, s_ReaderAk, s_ClearAk, "Клавиша: вкл/выкл автокилл", "tc_ak_toggle");
+	{
+		// Live status: what the client currently sees for each tee
+		for(int Conn = 0; Conn < NUM_DUMMIES; Conn++)
+		{
+			const CExtras::SAutoKillInfo Info = GameClient()->m_Extras.AutoKillInfo(Conn);
+			char aStatus[192];
+			const char *pName = Conn == 0 ? "Основной" : "Дамми";
+			if(!Info.m_Present)
+				str_format(aStatus, sizeof(aStatus), "%s: нет на карте. Киллов отправлено: %d", pName, Info.m_KillsSent);
+			else if(Info.m_Frozen)
+				str_format(aStatus, sizeof(aStatus), "%s: во фризе %.1f с%s. Киллов отправлено: %d", pName, Info.m_FrozenFor, Info.m_Applies ? "" : " (не выбран)", Info.m_KillsSent);
+			else
+				str_format(aStatus, sizeof(aStatus), "%s: не во фризе%s. Киллов отправлено: %d", pName, Info.m_Applies ? "" : " (не выбран)", Info.m_KillsSent);
+			Column.HSplitTop(LineSize * 0.9f, &Label, &Column);
+			TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.65f);
+			Ui()->DoLabel(&Label, aStatus, FontSize * 0.8f, TEXTALIGN_ML);
+			TextRender()->TextColor(TextRender()->DefaultTextColor());
+		}
+	}
 	s_SectionBoxes.back().h = Column.y - s_SectionBoxes.back().y;
 
 	// ***** RightView ***** //
@@ -3192,22 +3211,43 @@ void CMenus::RenderSettingsTClientExtrasFeatures(CUIRect MainView)
 	Column.HSplitTop(Margin, nullptr, &Column);
 	s_SectionBoxes.push_back(Column);
 	Column.HSplitTop(HeadlineHeight, &Label, &Column);
-	Ui()->DoLabel(&Label, TCLocalize("Friend Tracker"), HeadlineFontSize, TEXTALIGN_ML);
+	Ui()->DoLabel(&Label, "Отслеживание друзей", HeadlineFontSize, TEXTALIGN_ML);
 	Column.HSplitTop(MarginSmall, nullptr, &Column);
 
-	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcFtEnable, TCLocalize("Notify when friends come online"), &g_Config.m_TcFtEnable, &Column, LineSize);
-	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcFtCurrent, TCLocalize("Friend joins my current server"), &g_Config.m_TcFtCurrent, &Column, LineSize);
-	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcFtGlobal, TCLocalize("Friend appears on any other server"), &g_Config.m_TcFtGlobal, &Column, LineSize);
+	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcFtEnable, "Уведомлять, когда друзья заходят в сеть", &g_Config.m_TcFtEnable, &Column, LineSize);
+	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcFtCurrent, "Друг зашёл на мой текущий сервер", &g_Config.m_TcFtCurrent, &Column, LineSize);
+	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcFtGlobal, "Друг появился на любом другом сервере", &g_Config.m_TcFtGlobal, &Column, LineSize);
 	Column.HSplitTop(LineSize, &Button, &Column);
-	Ui()->DoScrollbarOption(&g_Config.m_TcFtInterval, &g_Config.m_TcFtInterval, &Button, TCLocalize("Server list scan interval"), 30, 900, &CUi::ms_LinearScrollbarScale, CUi::SCROLLBAR_OPTION_NOCLAMPVALUE, "s");
+	Ui()->DoScrollbarOption(&g_Config.m_TcFtInterval, &g_Config.m_TcFtInterval, &Button, "Интервал скана списка серверов", 30, 900, &CUi::ms_LinearScrollbarScale, CUi::SCROLLBAR_OPTION_NOCLAMPVALUE, "s");
 	Column.HSplitTop(LineSize, &Button, &Column);
-	Ui()->DoScrollbarOption(&g_Config.m_TcFtDuration, &g_Config.m_TcFtDuration, &Button, TCLocalize("Notification time"), 2, 20, &CUi::ms_LinearScrollbarScale, 0, "s");
-	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcFtSound, TCLocalize("Play sound"), &g_Config.m_TcFtSound, &Column, LineSize);
-	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcFtChat, TCLocalize("Also print in chat"), &g_Config.m_TcFtChat, &Column, LineSize);
-	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcFtExisting, TCLocalize("Show friends already on server when I join"), &g_Config.m_TcFtExisting, &Column, LineSize);
+	Ui()->DoScrollbarOption(&g_Config.m_TcFtDuration, &g_Config.m_TcFtDuration, &Button, "Время показа уведомления", 2, 20, &CUi::ms_LinearScrollbarScale, 0, "s");
+	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcFtSound, "Звук уведомления", &g_Config.m_TcFtSound, &Column, LineSize);
+	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcFtChat, "Дублировать в чат", &g_Config.m_TcFtChat, &Column, LineSize);
+	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcFtExisting, "Показывать друзей, уже сидящих на сервере, когда я захожу", &g_Config.m_TcFtExisting, &Column, LineSize);
 
 	Column.HSplitTop(LineSize, &Label, &Column);
-	Ui()->DoLabel(&Label, TCLocalize("Uses your friends list (add friends from the server browser or scoreboard)."), FontSize * 0.8f, TEXTALIGN_ML);
+	Ui()->DoLabel(&Label, "Используется ваш список друзей (добавляйте друзей в браузере серверов или в таблице игроков).", FontSize * 0.8f, TEXTALIGN_ML);
+	{
+		const CExtras::SFriendInfo Info = GameClient()->m_Extras.FriendInfo();
+		char aStatus[192];
+		str_format(aStatus, sizeof(aStatus), "В списке друзей: %d. Сейчас на этом сервере: %d.", Info.m_ListSize, Info.m_InServer);
+		Column.HSplitTop(LineSize * 0.9f, &Label, &Column);
+		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.65f);
+		Ui()->DoLabel(&Label, aStatus, FontSize * 0.8f, TEXTALIGN_ML);
+		if(Info.m_SinceScan < 0.0f)
+			str_copy(aStatus, "Скан других серверов ещё не выполнялся. Он идёт только при закрытом меню.");
+		else
+			str_format(aStatus, sizeof(aStatus), "Последний скан: %.0f с назад (серверов: %d, друзей найдено: %d).%s", Info.m_SinceScan, Info.m_ScanServers, Info.m_ScanFriends, Info.m_Scanning ? " Идёт новый скан." : "");
+		Column.HSplitTop(LineSize * 0.9f, &Label, &Column);
+		Ui()->DoLabel(&Label, aStatus, FontSize * 0.8f, TEXTALIGN_ML);
+		TextRender()->TextColor(TextRender()->DefaultTextColor());
+
+		static CButtonContainer s_TestToastButton;
+		Column.HSplitTop(LineSize + 4.0f, &Button, &Column);
+		Button.HMargin(2.0f, &Button);
+		if(DoButton_Menu(&s_TestToastButton, "Проверить уведомление", 0, &Button))
+			GameClient()->m_Extras.TestToast();
+	}
 	s_SectionBoxes.back().h = Column.y - s_SectionBoxes.back().y;
 
 	// ***** END OF PAGE ***** //
@@ -3234,7 +3274,7 @@ void CMenus::RenderSettingsTClientExtras(CUIRect MainView)
 	constexpr int NumSubs = NUM_EXTRAS_SUBS;
 	static int s_CurSub = EXTRAS_SUB_FEATURES;
 	static CButtonContainer s_aSubTabs[NumSubs] = {};
-	const char *apNames[NumSubs] = {TCLocalize("Features"), TCLocalize("Binds"), TCLocalize("Antiping")};
+	const char *apNames[NumSubs] = {"Функции", "Бинды", "Антипинг"};
 
 	CUIRect TabBar, Button;
 	MainView.HSplitTop(LineSize, &TabBar, &MainView);
@@ -3271,17 +3311,17 @@ struct SExtrasBind
 };
 
 static const SExtrasBind gs_aExtrasBindsDummy[] = {
-	{"Hook + dummy hammer (hold)", "+hook;+toggle cl_dummy_hammer 1 0", "Dummy hammers while you hold hook (hammerfly). Releases both on key up."},
-	{"Fire + dummy hammer (hold)", "+fire;+toggle cl_dummy_hammer 1 0", "Deep fly: you shoot and the dummy hammers while the key is held."},
-	{"Dummy copies my moves (hold)", "+toggle cl_dummy_copy_moves 1 0", "Dummy mirrors your inputs only while the key is held."},
-	{"Switch to dummy, hammerfly off", "cl_dummy_hammer 0; toggle cl_dummy 0 1", "Swap control and make sure the dummy stops hammering."},
-	{"Kill both tees", "cl_dummy 1; kill; cl_dummy 0; kill", "Kills the dummy and the main tee in one press."},
+	{"Хук + хаммер дамми (удерживать)", "+hook;+toggle cl_dummy_hammer 1 0", "Дамми бьёт хаммером, пока вы держите хук (хаммерфлай). При отпускании выключается."},
+	{"Огонь + хаммер дамми (удерживать)", "+fire;+toggle cl_dummy_hammer 1 0", "Deep fly: вы стреляете, а дамми бьёт хаммером, пока клавиша зажата."},
+	{"Дамми копирует мои движения (удерживать)", "+toggle cl_dummy_copy_moves 1 0", "Дамми повторяет ваши действия, только пока клавиша зажата."},
+	{"Переключиться на дамми, хаммерфлай выкл", "cl_dummy_hammer 0; toggle cl_dummy 0 1", "Меняет управление и гарантирует, что дамми перестал бить хаммером."},
+	{"Убить обоих тии", "cl_dummy 1; kill; cl_dummy 0; kill", "Убивает дамми и основного тии одним нажатием."},
 };
 
 static const SExtrasBind gs_aExtrasBindsTeam[] = {
-	{"Dummy joins team 1 and locks, then you join", "cl_dummy 1; say /team 1; say /lock; cl_dummy 0; say /team 1", "Needs the dummy to be connected already."},
-	{"Same, fall back to team 2 if 1 is taken", "cl_dummy 1; say /team 1; say /team 2; say /lock; cl_dummy 0; say /team 1; say /team 2", "Needs the dummy to be connected already."},
-	{"Both tees leave the team (team 0)", "cl_dummy 1; say /team 0; cl_dummy 0; say /team 0", "Moves the dummy and the main tee back to team 0."},
+	{"Дамми заходит в team 1 и лочит, затем заходите вы", "cl_dummy 1; say /team 1; say /lock; cl_dummy 0; say /team 1", "Дамми уже должен быть подключён."},
+	{"То же, но если team 1 занята, то team 2", "cl_dummy 1; say /team 1; say /team 2; say /lock; cl_dummy 0; say /team 1; say /team 2", "Дамми уже должен быть подключён."},
+	{"Оба тии выходят из команды (team 0)", "cl_dummy 1; say /team 0; cl_dummy 0; say /team 0", "Переводит дамми и основного тии обратно в team 0."},
 };
 
 void CMenus::RenderSettingsTClientExtrasBinds(CUIRect MainView)
@@ -3320,9 +3360,9 @@ void CMenus::RenderSettingsTClientExtrasBinds(CUIRect MainView)
 			Row.VSplitLeft(Row.w * 0.62f, &Text, &Key);
 			Key.VSplitLeft(MarginSmall, nullptr, &Key);
 			Text.HSplitTop(Text.h * 0.55f, &Title, &Hint);
-			Ui()->DoLabel(&Title, TCLocalize(pBinds[i].m_pTitle), FontSize, TEXTALIGN_ML);
+			Ui()->DoLabel(&Title, pBinds[i].m_pTitle, FontSize, TEXTALIGN_ML);
 			TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.55f);
-			Ui()->DoLabel(&Hint, TCLocalize(pBinds[i].m_pHint), FontSize * 0.7f, TEXTALIGN_ML);
+			Ui()->DoLabel(&Hint, pBinds[i].m_pHint, FontSize * 0.7f, TEXTALIGN_ML);
 			TextRender()->TextColor(TextRender()->DefaultTextColor());
 
 			// Find the key currently bound to this exact command
@@ -3353,13 +3393,13 @@ void CMenus::RenderSettingsTClientExtrasBinds(CUIRect MainView)
 	};
 
 	MainView.HSplitTop(Margin, nullptr, &MainView);
-	DoSection(TCLocalize("Dummy"), gs_aExtrasBindsDummy, (int)std::size(gs_aExtrasBindsDummy));
-	DoSection(TCLocalize("Teams"), gs_aExtrasBindsTeam, (int)std::size(gs_aExtrasBindsTeam));
+	DoSection("Дамми", gs_aExtrasBindsDummy, (int)std::size(gs_aExtrasBindsDummy));
+	DoSection("Команды", gs_aExtrasBindsTeam, (int)std::size(gs_aExtrasBindsTeam));
 
 	CUIRect Note;
 	MainView.HSplitTop(LineSize * 1.5f, &Note, &MainView);
 	if(s_ScrollRegion.AddRect(Note))
-		Ui()->DoLabel(&Note, TCLocalize("Binds are stored like normal binds, so they also show up in the Controls page and in your config."), FontSize * 0.8f, TEXTALIGN_ML);
+		Ui()->DoLabel(&Note, "Бинды сохраняются как обычные, поэтому видны в настройках управления и в конфиге.", FontSize * 0.8f, TEXTALIGN_ML);
 
 	s_ScrollRegion.End();
 }
@@ -3384,11 +3424,11 @@ struct SAntipingPreset
 
 // Starting points, not magic values: tune with the sliders below.
 static const SAntipingPreset gs_aAntipingPresets[] = {
-	{"Standard (~50 ms)", "Default-like antiping for stable low ping", 1, 1, 1, 0, 0, 1, 0, 150, 10, 0, 20, 0},
-	{"High ping (~90 ms)", "Improved smoothing, fast input and a little margin for 80-100 ms", 1, 1, 1, 0, 1, 1, 0, 150, 15, 1, 20, 0},
-	{"Unstable ping", "More conservative prediction and larger margin when ping jumps", 1, 2, 1, 0, 1, 1, 1, 200, 30, 1, 20, 0},
-	{"Gores / freeze", "Conservative prediction near freeze, less overshoot", 1, 3, 1, 0, 1, 1, 1, 150, 15, 0, 20, 1},
-	{"Antiping off", "Plain prediction like vanilla DDNet", 0, 1, 1, 0, 0, 1, 0, 150, 10, 0, 20, 0},
+	{"Стандарт (~50 мс)", "Обычный антипинг для стабильного низкого пинга", 1, 1, 1, 0, 0, 1, 0, 150, 10, 0, 20, 0},
+	{"Высокий пинг (~90 мс)", "Улучшенное сглаживание, быстрый ввод и небольшой запас для 80–100 мс", 1, 1, 1, 0, 1, 1, 0, 150, 15, 1, 20, 0},
+	{"Нестабильный пинг", "Осторожное предсказание и больший запас, когда пинг скачет", 1, 2, 1, 0, 1, 1, 1, 200, 30, 1, 20, 0},
+	{"Gores / фриз", "Осторожное предсказание у фриза, меньше перелётов", 1, 3, 1, 0, 1, 1, 1, 150, 15, 0, 20, 1},
+	{"Антипинг выкл", "Обычное предсказание, как в ванильном DDNet", 0, 1, 1, 0, 0, 1, 0, 150, 10, 0, 20, 0},
 };
 
 void CMenus::RenderSettingsTClientExtrasAntiping(CUIRect MainView)
@@ -3430,7 +3470,7 @@ void CMenus::RenderSettingsTClientExtrasAntiping(CUIRect MainView)
 	Column.HSplitTop(Margin, nullptr, &Column);
 	s_SectionBoxes.push_back(Column);
 	Column.HSplitTop(HeadlineHeight, &Label, &Column);
-	Ui()->DoLabel(&Label, TCLocalize("Presets"), HeadlineFontSize, TEXTALIGN_ML);
+	Ui()->DoLabel(&Label, "Пресеты", HeadlineFontSize, TEXTALIGN_ML);
 	Column.HSplitTop(MarginSmall, nullptr, &Column);
 
 	// Current ping
@@ -3440,9 +3480,9 @@ void CMenus::RenderSettingsTClientExtrasAntiping(CUIRect MainView)
 		Ping = GameClient()->m_Snap.m_apPlayerInfos[LocalId]->m_Latency;
 	char aBuf[128];
 	if(Ping >= 0)
-		str_format(aBuf, sizeof(aBuf), TCLocalize("Your ping: %d ms"), Ping);
+		str_format(aBuf, sizeof(aBuf), "Ваш пинг: %d мс", Ping);
 	else
-		str_copy(aBuf, TCLocalize("Your ping: join a server to see it"));
+		str_copy(aBuf, "Ваш пинг: зайдите на сервер, чтобы увидеть");
 	Column.HSplitTop(LineSize, &Label, &Column);
 	Ui()->DoLabel(&Label, aBuf, FontSize, TEXTALIGN_ML);
 
@@ -3464,7 +3504,7 @@ void CMenus::RenderSettingsTClientExtrasAntiping(CUIRect MainView)
 	static CButtonContainer s_AutoButton;
 	Column.HSplitTop(LineSize + 4.0f, &Button, &Column);
 	Button.HMargin(2.0f, &Button);
-	if(DoButton_Menu(&s_AutoButton, TCLocalize("Auto-pick by current ping"), 0, &Button) && Ping >= 0)
+	if(DoButton_Menu(&s_AutoButton, "Подобрать по текущему пингу", 0, &Button) && Ping >= 0)
 		ApplyPreset(Ping < 70 ? gs_aAntipingPresets[0] : gs_aAntipingPresets[1]);
 	Column.HSplitTop(MarginExtraSmall, nullptr, &Column);
 
@@ -3473,15 +3513,15 @@ void CMenus::RenderSettingsTClientExtrasAntiping(CUIRect MainView)
 	{
 		Column.HSplitTop(LineSize + 4.0f, &Button, &Column);
 		Button.HMargin(2.0f, &Button);
-		if(DoButton_Menu(&s_aPresetButtons[i], TCLocalize(gs_aAntipingPresets[i].m_pName), 0, &Button))
+		if(DoButton_Menu(&s_aPresetButtons[i], gs_aAntipingPresets[i].m_pName, 0, &Button))
 			ApplyPreset(gs_aAntipingPresets[i]);
 		Column.HSplitTop(LineSize * 0.8f, &Label, &Column);
 		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.55f);
-		Ui()->DoLabel(&Label, TCLocalize(gs_aAntipingPresets[i].m_pHint), FontSize * 0.75f, TEXTALIGN_ML);
+		Ui()->DoLabel(&Label, gs_aAntipingPresets[i].m_pHint, FontSize * 0.75f, TEXTALIGN_ML);
 		TextRender()->TextColor(TextRender()->DefaultTextColor());
 	}
 	Column.HSplitTop(LineSize, &Label, &Column);
-	Ui()->DoLabel(&Label, TCLocalize("Presets change the settings on the right, you can fine-tune after."), FontSize * 0.75f, TEXTALIGN_ML);
+	Ui()->DoLabel(&Label, "Пресеты меняют настройки справа, после этого их можно подкрутить.", FontSize * 0.75f, TEXTALIGN_ML);
 	s_SectionBoxes.back().h = Column.y - s_SectionBoxes.back().y;
 	LeftView = Column;
 
@@ -3490,27 +3530,27 @@ void CMenus::RenderSettingsTClientExtrasAntiping(CUIRect MainView)
 	Column.HSplitTop(Margin, nullptr, &Column);
 	s_SectionBoxes.push_back(Column);
 	Column.HSplitTop(HeadlineHeight, &Label, &Column);
-	Ui()->DoLabel(&Label, TCLocalize("Antiping"), HeadlineFontSize, TEXTALIGN_ML);
+	Ui()->DoLabel(&Label, "Антипинг", HeadlineFontSize, TEXTALIGN_ML);
 	Column.HSplitTop(MarginSmall, nullptr, &Column);
 
-	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ClAntiPing, TCLocalize("Enable antiping"), &g_Config.m_ClAntiPing, &Column, LineSize);
-	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ClAntiPingPreInput, TCLocalize("Use preinputs for other players"), &g_Config.m_ClAntiPingPreInput, &Column, LineSize);
-	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ClAntiPingGrenade, TCLocalize("Predict grenades"), &g_Config.m_ClAntiPingGrenade, &Column, LineSize);
-	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ClAntiPingWeapons, TCLocalize("Predict weapon projectiles"), &g_Config.m_ClAntiPingWeapons, &Column, LineSize);
-	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ClAntiPingGunfire, TCLocalize("Predict gunfire"), &g_Config.m_ClAntiPingGunfire, &Column, LineSize);
+	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ClAntiPing, "Включить антипинг", &g_Config.m_ClAntiPing, &Column, LineSize);
+	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ClAntiPingPreInput, "Использовать преинпуты других игроков", &g_Config.m_ClAntiPingPreInput, &Column, LineSize);
+	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ClAntiPingGrenade, "Предсказывать гранаты", &g_Config.m_ClAntiPingGrenade, &Column, LineSize);
+	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ClAntiPingWeapons, "Предсказывать снаряды оружия", &g_Config.m_ClAntiPingWeapons, &Column, LineSize);
+	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_ClAntiPingGunfire, "Предсказывать стрельбу", &g_Config.m_ClAntiPingGunfire, &Column, LineSize);
 	Column.HSplitTop(LineSize, &Button, &Column);
-	Ui()->DoScrollbarOption(&g_Config.m_ClAntiPingPlayers, &g_Config.m_ClAntiPingPlayers, &Button, TCLocalize("Players (1 all, 2 interaction, 3 +frozen)"), 0, 3);
+	Ui()->DoScrollbarOption(&g_Config.m_ClAntiPingPlayers, &g_Config.m_ClAntiPingPlayers, &Button, "Игроки (1 все, 2 взаимодействие, 3 +замороженные)", 0, 3);
 	Column.HSplitTop(LineSize, &Button, &Column);
-	Ui()->DoScrollbarOption(&g_Config.m_ClAntiPingLimit, &g_Config.m_ClAntiPingLimit, &Button, TCLocalize("Antiping delay limit (0 = off)"), 0, 500, &CUi::ms_LinearScrollbarScale, CUi::SCROLLBAR_OPTION_NOCLAMPVALUE, "ms");
+	Ui()->DoScrollbarOption(&g_Config.m_ClAntiPingLimit, &g_Config.m_ClAntiPingLimit, &Button, "Лимит задержки антипинга (0 = выкл)", 0, 500, &CUi::ms_LinearScrollbarScale, CUi::SCROLLBAR_OPTION_NOCLAMPVALUE, "ms");
 	Column.HSplitTop(LineSize, &Button, &Column);
-	Ui()->DoScrollbarOption(&g_Config.m_ClPredictionMargin, &g_Config.m_ClPredictionMargin, &Button, TCLocalize("Prediction margin"), 10, 75, &CUi::ms_LinearScrollbarScale, CUi::SCROLLBAR_OPTION_NOCLAMPVALUE, "ms");
+	Ui()->DoScrollbarOption(&g_Config.m_ClPredictionMargin, &g_Config.m_ClPredictionMargin, &Button, "Запас предсказания", 10, 75, &CUi::ms_LinearScrollbarScale, CUi::SCROLLBAR_OPTION_NOCLAMPVALUE, "ms");
 
 	Column.HSplitTop(MarginSmall, nullptr, &Column);
 	// Smoothing: classic and improved are mutually exclusive
 	{
 		CUIRect Check;
 		Column.HSplitTop(LineSize, &Check, &Column);
-		if(DoButton_CheckBox(&g_Config.m_ClAntiPingSmooth, TCLocalize("Smooth other players (classic)"), g_Config.m_ClAntiPingSmooth, &Check))
+		if(DoButton_CheckBox(&g_Config.m_ClAntiPingSmooth, "Сглаживание других игроков (классическое)", g_Config.m_ClAntiPingSmooth, &Check))
 		{
 			g_Config.m_ClAntiPingSmooth ^= 1;
 			if(g_Config.m_ClAntiPingSmooth)
@@ -3518,7 +3558,7 @@ void CMenus::RenderSettingsTClientExtrasAntiping(CUIRect MainView)
 		}
 		Column.HSplitTop(MarginExtraSmall, nullptr, &Column);
 		Column.HSplitTop(LineSize, &Check, &Column);
-		if(DoButton_CheckBox(&g_Config.m_TcAntiPingImproved, TCLocalize("Improved smoothing (TClient)"), g_Config.m_TcAntiPingImproved, &Check))
+		if(DoButton_CheckBox(&g_Config.m_TcAntiPingImproved, "Улучшенное сглаживание (TClient)", g_Config.m_TcAntiPingImproved, &Check))
 		{
 			g_Config.m_TcAntiPingImproved ^= 1;
 			if(g_Config.m_TcAntiPingImproved)
@@ -3528,20 +3568,20 @@ void CMenus::RenderSettingsTClientExtrasAntiping(CUIRect MainView)
 	}
 	if(g_Config.m_TcAntiPingImproved)
 	{
-		DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcAntiPingStableDirection, TCLocalize("Optimistic along stable axis"), &g_Config.m_TcAntiPingStableDirection, &Column, LineSize);
-		DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcAntiPingNegativeBuffer, TCLocalize("Negative buffer (helps in gores)"), &g_Config.m_TcAntiPingNegativeBuffer, &Column, LineSize);
+		DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcAntiPingStableDirection, "Оптимистично по устойчивой оси", &g_Config.m_TcAntiPingStableDirection, &Column, LineSize);
+		DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcAntiPingNegativeBuffer, "Отрицательный буфер (помогает в gores)", &g_Config.m_TcAntiPingNegativeBuffer, &Column, LineSize);
 		Column.HSplitTop(LineSize, &Button, &Column);
-		Ui()->DoScrollbarOption(&g_Config.m_TcAntiPingUncertaintyScale, &g_Config.m_TcAntiPingUncertaintyScale, &Button, TCLocalize("Uncertainty scale"), 25, 400, &CUi::ms_LinearScrollbarScale, 0, "%");
+		Ui()->DoScrollbarOption(&g_Config.m_TcAntiPingUncertaintyScale, &g_Config.m_TcAntiPingUncertaintyScale, &Button, "Масштаб неопределённости", 25, 400, &CUi::ms_LinearScrollbarScale, 0, "%");
 	}
-	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcRemoveAnti, TCLocalize("Reduce antiping in freeze"), &g_Config.m_TcRemoveAnti, &Column, LineSize);
+	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcRemoveAnti, "Ослаблять антипинг во фризе", &g_Config.m_TcRemoveAnti, &Column, LineSize);
 
 	Column.HSplitTop(MarginSmall, nullptr, &Column);
-	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcFastInput, TCLocalize("Fast input (use input before next tick)"), &g_Config.m_TcFastInput, &Column, LineSize);
+	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcFastInput, "Быстрый ввод (ввод до следующего тика)", &g_Config.m_TcFastInput, &Column, LineSize);
 	if(g_Config.m_TcFastInput)
 	{
 		Column.HSplitTop(LineSize, &Button, &Column);
-		Ui()->DoScrollbarOption(&g_Config.m_TcFastInputAmount, &g_Config.m_TcFastInputAmount, &Button, TCLocalize("Fast input amount"), 1, 40, &CUi::ms_LinearScrollbarScale, CUi::SCROLLBAR_OPTION_NOCLAMPVALUE, "ms");
-		DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcFastInputOthers, TCLocalize("Apply to other tees"), &g_Config.m_TcFastInputOthers, &Column, LineSize);
+		Ui()->DoScrollbarOption(&g_Config.m_TcFastInputAmount, &g_Config.m_TcFastInputAmount, &Button, "Величина быстрого ввода", 1, 40, &CUi::ms_LinearScrollbarScale, CUi::SCROLLBAR_OPTION_NOCLAMPVALUE, "ms");
+		DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcFastInputOthers, "Применять к другим тии", &g_Config.m_TcFastInputOthers, &Column, LineSize);
 	}
 	s_SectionBoxes.back().h = Column.y - s_SectionBoxes.back().y;
 	RightView = Column;

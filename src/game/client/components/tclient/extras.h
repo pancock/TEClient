@@ -30,6 +30,29 @@ public:
 	};
 	EStrongState StrongState() const { return m_StrongState; }
 
+	// Live status for the settings page, so it is visible what the client "sees"
+	struct SAutoKillInfo
+	{
+		bool m_Present = false; // tee exists
+		bool m_Applies = false; // selected by "applies to"
+		bool m_Frozen = false;
+		float m_FrozenFor = 0.0f; // seconds
+		int m_KillsSent = 0;
+	};
+	SAutoKillInfo AutoKillInfo(int Conn) const;
+
+	struct SFriendInfo
+	{
+		int m_ListSize = 0; // friends in the friends list
+		int m_InServer = 0; // friends currently seen on this server
+		bool m_Scanning = false;
+		float m_SinceScan = -1.0f; // seconds since last finished scan, <0 if none yet
+		int m_ScanServers = 0;
+		int m_ScanFriends = 0;
+	};
+	SFriendInfo FriendInfo() const;
+	void TestToast();
+
 private:
 	// ---- auto strong hook ----
 	EStrongState m_StrongState = STRONG_INACTIVE;
@@ -49,6 +72,9 @@ private:
 	float m_aLastAutoKill[NUM_DUMMIES] = {-1000.0f, -1000.0f};
 	void UpdateAutoKill();
 	bool IsFrozen(int Conn) const;
+	bool m_aPresent[NUM_DUMMIES] = {false, false};
+	bool m_aApplies[NUM_DUMMIES] = {false, false};
+	int m_aKillsSent[NUM_DUMMIES] = {0, 0};
 
 	// ---- friend tracker ----
 	bool m_aFriendPresent[MAX_CLIENTS] = {};
@@ -73,6 +99,8 @@ private:
 	float m_ScanStart = 0.0f;
 	float m_LastScan = -1000.0f;
 	bool m_GlobalBaselineDone = false;
+	int m_LastScanServers = 0;
+	int m_LastScanFriends = 0;
 	std::map<std::string, SFriendLocation> m_GlobalOnline;
 	std::map<std::string, float> m_GlobalNotifiedAt;
 	void UpdateGlobalFriends();
