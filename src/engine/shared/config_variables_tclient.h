@@ -297,13 +297,13 @@ MACRO_CONFIG_INT(TcAhSkipTeam, tc_ah_skip_team, 0, 0, 1, CFGFLAG_CLIENT | CFGFLA
 // Extras: auto kill on freeze
 MACRO_CONFIG_INT(TcAkEnable, tc_ak_enable, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Automatically kill when frozen for too long")
 MACRO_CONFIG_INT(TcAkDelay, tc_ak_delay, 0, 0, 10000, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Time in ms spent frozen before auto kill (0 = instant)")
-MACRO_CONFIG_INT(TcAkTarget, tc_ak_target, 0, 0, 3, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Which tee auto kill applies to (0 = controlled tee, 1 = main tee, 2 = dummy, 3 = both independently)")
+MACRO_CONFIG_INT(TcAkTarget, tc_ak_target, 0, 0, 3, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Which tee auto kill applies to (0 = controlled tee, 1 = main tee, 2 = dummy, 3 = both tees together: when either is frozen long enough both are killed)")
 
 // Extras: friend tracker
 MACRO_CONFIG_INT(TcFtEnable, tc_ft_enable, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Notify when a friend comes online")
 MACRO_CONFIG_INT(TcFtCurrent, tc_ft_current, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Notify when a friend joins the server you are on")
 MACRO_CONFIG_INT(TcFtGlobal, tc_ft_global, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Notify when a friend shows up on any other server (periodically refreshes the server list)")
-MACRO_CONFIG_INT(TcFtInterval, tc_ft_interval, 120, 30, 900, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Seconds between server list scans for friends")
+MACRO_CONFIG_INT(TcFtInterval, tc_ft_interval, 20, 5, 900, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Seconds between server list scans for friends")
 MACRO_CONFIG_INT(TcFtDuration, tc_ft_duration, 5, 2, 20, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Seconds a friend notification stays on screen")
 MACRO_CONFIG_INT(TcFtSound, tc_ft_sound, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Play a sound for friend notifications")
 MACRO_CONFIG_INT(TcFtChat, tc_ft_chat, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Also print friend notifications in chat")

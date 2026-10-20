@@ -3168,7 +3168,7 @@ void CMenus::RenderSettingsTClientExtrasFeatures(CUIRect MainView)
 		Ui()->DoScrollbarOption(&g_Config.m_TcAkDelay, &g_Config.m_TcAkDelay, &Button, "Задержка килла", 0, 10000, &CUi::ms_LinearScrollbarScale, CUi::SCROLLBAR_OPTION_NOCLAMPVALUE, "ms");
 	{
 		static std::vector<const char *> s_TargetNames;
-		s_TargetNames = {"Управляемый тии", "Основной тии", "Дамми", "Оба тии"};
+		s_TargetNames = {"Управляемый тии", "Основной тии", "Дамми", "Оба тии (парой)"};
 		static CUi::SDropDownState s_TargetState;
 		static CScrollRegion s_TargetScrollRegion;
 		s_TargetState.m_SelectionPopupContext.m_pScrollRegion = &s_TargetScrollRegion;
@@ -3179,6 +3179,13 @@ void CMenus::RenderSettingsTClientExtrasFeatures(CUIRect MainView)
 		Ui()->DoLabel(&Label, "Действует на: ", FontSize, TEXTALIGN_ML);
 		g_Config.m_TcAkTarget = Ui()->DoDropDown(&DropDownRect, g_Config.m_TcAkTarget, s_TargetNames.data(), s_TargetNames.size(), s_TargetState);
 		Column.HSplitTop(MarginExtraSmall, nullptr, &Column);
+		if(g_Config.m_TcAkTarget == 3)
+		{
+			Column.HSplitTop(LineSize * 0.9f, &Label, &Column);
+			TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.65f);
+			Ui()->DoLabel(&Label, "Парой: как только любой из тии пробыл во фризе заданное время, убиваются оба сразу.", FontSize * 0.75f, TEXTALIGN_ML);
+			TextRender()->TextColor(TextRender()->DefaultTextColor());
+		}
 	}
 	static CButtonContainer s_ReaderAk, s_ClearAk;
 	DoLine_KeyReader(Column, s_ReaderAk, s_ClearAk, "Клавиша: вкл/выкл автокилл", "tc_ak_toggle");
@@ -3218,7 +3225,7 @@ void CMenus::RenderSettingsTClientExtrasFeatures(CUIRect MainView)
 	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcFtCurrent, "Друг зашёл на мой текущий сервер", &g_Config.m_TcFtCurrent, &Column, LineSize);
 	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcFtGlobal, "Друг появился на любом другом сервере", &g_Config.m_TcFtGlobal, &Column, LineSize);
 	Column.HSplitTop(LineSize, &Button, &Column);
-	Ui()->DoScrollbarOption(&g_Config.m_TcFtInterval, &g_Config.m_TcFtInterval, &Button, "Интервал скана списка серверов", 30, 900, &CUi::ms_LinearScrollbarScale, CUi::SCROLLBAR_OPTION_NOCLAMPVALUE, "s");
+	Ui()->DoScrollbarOption(&g_Config.m_TcFtInterval, &g_Config.m_TcFtInterval, &Button, "Интервал скана списка серверов", 5, 300, &CUi::ms_LinearScrollbarScale, CUi::SCROLLBAR_OPTION_NOCLAMPVALUE, "s");
 	Column.HSplitTop(LineSize, &Button, &Column);
 	Ui()->DoScrollbarOption(&g_Config.m_TcFtDuration, &g_Config.m_TcFtDuration, &Button, "Время показа уведомления", 2, 20, &CUi::ms_LinearScrollbarScale, 0, "s");
 	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcFtSound, "Звук уведомления", &g_Config.m_TcFtSound, &Column, LineSize);

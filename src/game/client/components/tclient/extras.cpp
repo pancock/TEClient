@@ -17,6 +17,7 @@
 #include <game/client/gameclient.h>
 
 #include <algorithm>
+#include <set>
 
 // ---------------------------------------------------------------------------
 // Console commands
@@ -206,6 +207,9 @@ void CExtras::UpdateStrongHook()
 void CExtras::UpdateAutoKill()
 {
 	const float Now = Client()->LocalTime();
+	const bool Pair = g_Config.m_TcAkTarget == 3;
+	bool aReady[NUM_DUMMIES] = {false, false};
+
 	for(int Conn = 0; Conn < NUM_DUMMIES; Conn++)
 	{
 		const int Id = GameClient()->m_aLocalIds[Conn];
@@ -228,14 +232,34 @@ void CExtras::UpdateAutoKill()
 			m_aFrozenSince[Conn] = Now;
 		m_aFrozen[Conn] = Frozen;
 
-		if(!g_Config.m_TcAkEnable || !Applies || !Frozen)
-			continue;
+		aReady[Conn] = g_Config.m_TcAkEnable && Applies && Frozen && Now - m_aFrozenSince[Conn] >= (float)g_Config.m_TcAkDelay / 1000.0f;
+	}
 
-		if(Now - m_aFrozenSince[Conn] < (float)g_Config.m_TcAkDelay / 1000.0f)
-			continue;
-		if(Now - m_aLastAutoKill[Conn] < 1.0f) // resend only if the kill did not go through
-			continue;
+	if(!g_Config.m_TcAkEnable)
+		return;
 
+	if(Pair)
+	{
+		// Pair mode: as soon as either tee has been frozen long enough, both tees are killed together
+		if(!aReady[0] && !aReady[1])
+			return;
+		if(Now - std::max(m_aLastAutoKill[0], m_aLastAutoKill[1]) < 1.0f) // resend only if the kill did not go through
+			return;
+		for(int Conn = 0; Conn < NUM_DUMMIES; Conn++)
+		{
+			if(!m_aPresent[Conn])
+				continue;
+			SendKillTo(Conn);
+			m_aLastAutoKill[Conn] = Now;
+			m_aKillsSent[Conn]++;
+		}
+		return;
+	}
+
+	for(int Conn = 0; Conn < NUM_DUMMIES; Conn++)
+	{
+		if(!aReady[Conn] || Now - m_aLastAutoKill[Conn] < 1.0f)
+			continue;
 		SendKillTo(Conn);
 		m_aLastAutoKill[Conn] = Now;
 		m_aKillsSent[Conn]++;
@@ -307,6 +331,7 @@ void CExtras::UpdateFriendsInServer()
 		const bool Known = m_aFriendPresent[i] && str_comp(m_aaFriendName[i], Data.m_aName) == 0;
 		if(Friend && !Known)
 		{
+			m_TrackedOnline[Data.m_aName] = 0;
 			if(Baseline)
 			{
 				m_vExistingFriends.emplace_back(Data.m_aName);
@@ -397,11 +422,21 @@ void CExtras::EvaluateServerList()
 	if(pBrowser->NumServers() == 0)
 		return;
 
+	// Everybody who is online right now: in the server list, or on the server we are on
+	// (the master list lags behind, so our own server is the more accurate source for it)
+	std::set<std::string> Online;
+	for(const auto &[Name, Location] : Current)
+		Online.insert(Name);
+	for(int i = 0; i < MAX_CLIENTS; i++)
+		if(m_aFriendPresent[i])
+			Online.insert(m_aaFriendName[i]);
+
+	// Notify only about friends who came ONLINE, not about friends who merely moved between servers
 	if(m_GlobalBaselineDone)
 	{
 		for(const auto &[Name, Location] : Current)
 		{
-			if(m_GlobalOnline.count(Name))
+			if(m_TrackedOnline.count(Name))
 				continue;
 			if(IsNameOnCurrentServer(Name.c_str())) // already handled by the in-server tracker
 				continue;
@@ -415,7 +450,17 @@ void CExtras::EvaluateServerList()
 			AddFriendToast("Друг в сети", aText);
 		}
 	}
-	m_GlobalOnline = std::move(Current);
+
+	// Update who we consider online. A friend is dropped only after missing in two scans in a row.
+	for(const std::string &Name : Online)
+		m_TrackedOnline[Name] = 0;
+	for(auto It = m_TrackedOnline.begin(); It != m_TrackedOnline.end();)
+	{
+		if(!Online.count(It->first) && ++It->second >= 2)
+			It = m_TrackedOnline.erase(It);
+		else
+			++It;
+	}
 	m_GlobalBaselineDone = true;
 }
 

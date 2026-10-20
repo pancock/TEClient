@@ -8,6 +8,7 @@
 #include <game/client/component.h>
 
 #include <map>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -101,7 +102,7 @@ private:
 	bool m_GlobalBaselineDone = false;
 	int m_LastScanServers = 0;
 	int m_LastScanFriends = 0;
-	std::map<std::string, SFriendLocation> m_GlobalOnline;
+	std::map<std::string, int> m_TrackedOnline; // friend name -> scans in a row without being seen online
 	std::map<std::string, float> m_GlobalNotifiedAt;
 	void UpdateGlobalFriends();
 	void EvaluateServerList();
