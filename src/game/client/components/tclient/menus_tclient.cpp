@@ -3242,8 +3242,11 @@ void CMenus::RenderSettingsTClientExtras(CUIRect MainView)
 	for(int Sub = 0; Sub < NUM_EXTRAS_SUBS; ++Sub)
 	{
 		TabBar.VSplitLeft(TabWidth, &Button, &TabBar);
-		const int Corners = Sub == 0 ? IGraphics::CORNER_L : Sub == NUM_EXTRAS_SUBS - 1 ? IGraphics::CORNER_R :
-												   IGraphics::CORNER_NONE;
+		int Corners = IGraphics::CORNER_NONE;
+		if(Sub == 0)
+			Corners = IGraphics::CORNER_L;
+		else if(Sub == NUM_EXTRAS_SUBS - 1)
+			Corners = IGraphics::CORNER_R;
 		if(DoButton_MenuTab(&s_aSubTabs[Sub], apNames[Sub], s_CurSub == Sub, &Button, Corners, nullptr, nullptr, nullptr, nullptr, 4.0f))
 			s_CurSub = Sub;
 	}
@@ -3360,8 +3363,6 @@ void CMenus::RenderSettingsTClientExtrasBinds(CUIRect MainView)
 	s_ScrollRegion.End();
 }
 
-namespace
-{
 struct SAntipingPreset
 {
 	const char *m_pName;
@@ -3381,14 +3382,13 @@ struct SAntipingPreset
 };
 
 // Starting points, not magic values: tune with the sliders below.
-const SAntipingPreset gs_aAntipingPresets[] = {
+static const SAntipingPreset gs_aAntipingPresets[] = {
 	{"Standard (~50 ms)", "Default-like antiping for stable low ping", 1, 1, 1, 0, 0, 1, 0, 150, 10, 0, 20, 0},
 	{"High ping (~90 ms)", "Improved smoothing, fast input and a little margin for 80-100 ms", 1, 1, 1, 0, 1, 1, 0, 150, 15, 1, 20, 0},
 	{"Unstable ping", "More conservative prediction and larger margin when ping jumps", 1, 2, 1, 0, 1, 1, 1, 200, 30, 1, 20, 0},
 	{"Gores / freeze", "Conservative prediction near freeze, less overshoot", 1, 3, 1, 0, 1, 1, 1, 150, 15, 0, 20, 1},
 	{"Antiping off", "Plain prediction like vanilla DDNet", 0, 1, 1, 0, 0, 1, 0, 150, 10, 0, 20, 0},
 };
-} // namespace
 
 void CMenus::RenderSettingsTClientExtrasAntiping(CUIRect MainView)
 {
