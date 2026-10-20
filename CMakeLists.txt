@@ -2880,6 +2880,8 @@ if(CLIENT)
     components/tclient/custom_communities.cpp
     components/tclient/custom_communities.h
     components/tclient/data_version.h
+    components/tclient/extras.cpp
+    components/tclient/extras.h
     components/tclient/menus_tclient.cpp
     components/tclient/mod.cpp
     components/tclient/mod.h

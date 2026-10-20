@@ -70,6 +70,7 @@
 #include "components/tclient/bindchat.h"
 #include "components/tclient/bindwheel.h"
 #include "components/tclient/custom_communities.h"
+#include "components/tclient/extras.h"
 #include "components/tclient/mod.h"
 #include "components/tclient/moving_tiles.h"
 #include "components/tclient/mumble.h"
@@ -237,6 +238,7 @@ public:
 	COutlines m_Outlines;
 	CMumble m_Mumble;
 	CRainbow m_Rainbow;
+	CExtras m_Extras;
 	CWarList m_WarList;
 	CScripting m_Scripting;
 	CMod m_Mod;

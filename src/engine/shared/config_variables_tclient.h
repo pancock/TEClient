@@ -285,3 +285,26 @@ MACRO_CONFIG_INT(TcUiCompactList, tc_ui_compact_list, 0, 0, 1, CFGFLAG_CLIENT | 
 MACRO_CONFIG_INT(TcShowhudDummyPosition, tc_showhud_dummy_position, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show ingame HUD (Dummy Position)")
 MACRO_CONFIG_INT(TcShowhudDummySpeed, tc_showhud_dummy_speed, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show ingame HUD (Dummy Speed)")
 MACRO_CONFIG_INT(TcShowhudDummyAngle, tc_showhud_dummy_angle, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show ingame HUD (Dummy Aim Angle)")
+
+// Extras: auto strong hook (dummy)
+MACRO_CONFIG_INT(TcAhEnable, tc_ah_enable, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Automatically keep the chosen tee strong (requires dummy)")
+MACRO_CONFIG_INT(TcAhStrong, tc_ah_strong, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Which tee must have strong hook (0 = main tee, 1 = dummy)")
+MACRO_CONFIG_INT(TcAhCooldown, tc_ah_cooldown, 1200, 200, 10000, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Delay in ms between auto strong hook kill attempts")
+MACRO_CONFIG_INT(TcAhWindow, tc_ah_window, 5, 0, 60, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Only fix strong hook this many seconds after a tee respawned (0 = always)")
+MACRO_CONFIG_INT(TcAhMaxTries, tc_ah_max_tries, 5, 1, 20, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Maximum auto strong hook kill attempts in a row")
+MACRO_CONFIG_INT(TcAhSkipTeam, tc_ah_skip_team, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Do not auto fix strong hook while in a team other than 0")
+
+// Extras: auto kill on freeze
+MACRO_CONFIG_INT(TcAkEnable, tc_ak_enable, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Automatically kill when frozen for too long")
+MACRO_CONFIG_INT(TcAkDelay, tc_ak_delay, 0, 0, 10000, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Time in ms spent frozen before auto kill (0 = instant)")
+MACRO_CONFIG_INT(TcAkTarget, tc_ak_target, 0, 0, 3, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Which tee auto kill applies to (0 = controlled tee, 1 = main tee, 2 = dummy, 3 = both independently)")
+
+// Extras: friend tracker
+MACRO_CONFIG_INT(TcFtEnable, tc_ft_enable, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Notify when a friend comes online")
+MACRO_CONFIG_INT(TcFtCurrent, tc_ft_current, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Notify when a friend joins the server you are on")
+MACRO_CONFIG_INT(TcFtGlobal, tc_ft_global, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Notify when a friend shows up on any other server (periodically refreshes the server list)")
+MACRO_CONFIG_INT(TcFtInterval, tc_ft_interval, 120, 30, 900, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Seconds between server list scans for friends")
+MACRO_CONFIG_INT(TcFtDuration, tc_ft_duration, 5, 2, 20, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Seconds a friend notification stays on screen")
+MACRO_CONFIG_INT(TcFtSound, tc_ft_sound, 1, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Play a sound for friend notifications")
+MACRO_CONFIG_INT(TcFtChat, tc_ft_chat, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Also print friend notifications in chat")
+MACRO_CONFIG_INT(TcFtExisting, tc_ft_existing, 0, 0, 1, CFGFLAG_CLIENT | CFGFLAG_SAVE, "Show friends already present when joining a server")

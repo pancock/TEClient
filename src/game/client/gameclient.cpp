@@ -171,6 +171,7 @@ void CGameClient::OnConsoleInit()
 					      &m_BindWheel, // TClient
 					      &m_WarList, // TClient
 					      &m_StatusBar, // TClient
+					      &m_Extras, // TClient
 					      &m_InfoMessages,
 					      &m_Chat,
 					      &m_Broadcast,

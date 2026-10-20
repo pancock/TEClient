@@ -43,6 +43,7 @@ enum
 	TCLIENT_TAB_WARLIST,
 	TCLIENT_TAB_BINDCHAT,
 	TCLIENT_TAB_STATUSBAR,
+	TCLIENT_TAB_EXTRAS,
 	TCLIENT_TAB_INFO,
 	NUMBER_OF_TCLIENT_TABS
 };
@@ -341,6 +342,7 @@ void CMenus::RenderSettingsTClient(CUIRect MainView)
 		TCLocalize("War List"),
 		TCLocalize("Chat Binds"),
 		TCLocalize("Status Bar"),
+		TCLocalize("Extras"),
 		TCLocalize("Info")};
 
 	for(int Tab = 0; Tab < NUMBER_OF_TCLIENT_TABS; ++Tab)
@@ -367,6 +369,8 @@ void CMenus::RenderSettingsTClient(CUIRect MainView)
 		RenderSettingsTClientWarList(MainView);
 	if(s_CurCustomTab == TCLIENT_TAB_STATUSBAR)
 		RenderSettingsTClientStatusBar(MainView);
+	if(s_CurCustomTab == TCLIENT_TAB_EXTRAS)
+		RenderSettingsTClientExtras(MainView);
 	if(s_CurCustomTab == TCLIENT_TAB_INFO)
 		RenderSettingsTClientInfo(MainView);
 }
@@ -2286,6 +2290,7 @@ void CMenus::RenderSettingsTClientInfo(CUIRect MainView)
 		TCLocalize("War List"),
 		TCLocalize("Chat Binds"),
 		TCLocalize("Status Bar"),
+		TCLocalize("Extras"),
 		TCLocalize("Info")};
 	static int s_aShowTabs[NUMBER_OF_TCLIENT_TABS] = {};
 	for(int i = 0; i < NUMBER_OF_TCLIENT_TABS - 1; ++i)
@@ -3047,5 +3052,172 @@ void CMenus::RenderSettingsTClientConfigs(CUIRect MainView)
 
 	CUIRect EndPad{Content.x, Content.y, Content.w, 5.0f};
 	s_ScrollRegion.AddRect(EndPad);
+	s_ScrollRegion.End();
+}
+
+void CMenus::RenderSettingsTClientExtras(CUIRect MainView)
+{
+	CUIRect Column, LeftView, RightView, Button, Label;
+
+	static CScrollRegion s_ScrollRegion;
+	CScrollRegionParams ScrollParams;
+	ScrollParams.m_ScrollUnit = 60.0f;
+	ScrollParams.m_ForceShowScrollbar = true;
+	ScrollParams.m_ScrollbarMargin = 5.0f;
+	s_ScrollRegion.Begin(&MainView, &ScrollParams);
+
+	static std::vector<CUIRect> s_SectionBoxes;
+	const float ScrollOffset = MainView.y;
+	static float s_PrevScrollOffset = 0.0f;
+
+	MainView.VSplitRight(5.0f, &MainView, nullptr); // Padding for scrollbar
+	MainView.VSplitLeft(5.0f, nullptr, &MainView);
+
+	MainView.VSplitMid(&LeftView, &RightView, MarginBetweenViews);
+	LeftView.VSplitLeft(MarginSmall, nullptr, &LeftView);
+	RightView.VSplitRight(MarginSmall, &RightView, nullptr);
+
+	for(CUIRect &Section : s_SectionBoxes)
+	{
+		float Padding = MarginBetweenViews * 0.6666f;
+		Section.w += Padding;
+		Section.h += Padding;
+		Section.x -= Padding * 0.5f;
+		Section.y -= Padding * 0.5f;
+		Section.y -= s_PrevScrollOffset - ScrollOffset;
+		Section.Draw(ColorRGBA(0.0f, 0.0f, 0.0f, 0.25f), IGraphics::CORNER_ALL, 10.0f);
+	}
+	s_PrevScrollOffset = ScrollOffset;
+	s_SectionBoxes.clear();
+
+	// ***** LeftView ***** //
+	Column = LeftView;
+
+	// ***** Auto strong hook ***** //
+	Column.HSplitTop(Margin, nullptr, &Column);
+	s_SectionBoxes.push_back(Column);
+	Column.HSplitTop(HeadlineHeight, &Label, &Column);
+	Ui()->DoLabel(&Label, TCLocalize("Auto Strong Hook (dummy)"), HeadlineFontSize, TEXTALIGN_ML);
+	Column.HSplitTop(MarginSmall, nullptr, &Column);
+
+	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcAhEnable, TCLocalize("Keep chosen tee strong automatically"), &g_Config.m_TcAhEnable, &Column, LineSize);
+	{
+		static std::vector<const char *> s_StrongNames;
+		s_StrongNames = {TCLocalize("Main tee", "Strong hook"), TCLocalize("Dummy", "Strong hook")};
+		static CUi::SDropDownState s_StrongState;
+		static CScrollRegion s_StrongScrollRegion;
+		s_StrongState.m_SelectionPopupContext.m_pScrollRegion = &s_StrongScrollRegion;
+		CUIRect DropDownRect;
+		Column.HSplitTop(LineSize, &DropDownRect, &Column);
+		DropDownRect.VSplitLeft(150.0f, &Label, &DropDownRect);
+		Ui()->DoLabel(&Label, TCLocalize("Strong hook belongs to: "), FontSize, TEXTALIGN_ML);
+		g_Config.m_TcAhStrong = Ui()->DoDropDown(&DropDownRect, g_Config.m_TcAhStrong, s_StrongNames.data(), s_StrongNames.size(), s_StrongState);
+		Column.HSplitTop(MarginExtraSmall, nullptr, &Column);
+	}
+	Column.HSplitTop(LineSize, &Button, &Column);
+	Ui()->DoScrollbarOption(&g_Config.m_TcAhCooldown, &g_Config.m_TcAhCooldown, &Button, TCLocalize("Retry delay"), 200, 5000, &CUi::ms_LinearScrollbarScale, CUi::SCROLLBAR_OPTION_NOCLAMPVALUE, "ms");
+	Column.HSplitTop(LineSize, &Button, &Column);
+	Ui()->DoScrollbarOption(&g_Config.m_TcAhMaxTries, &g_Config.m_TcAhMaxTries, &Button, TCLocalize("Max attempts"), 1, 20);
+	Column.HSplitTop(LineSize, &Button, &Column);
+	Ui()->DoScrollbarOption(&g_Config.m_TcAhWindow, &g_Config.m_TcAhWindow, &Button, TCLocalize("Only after respawn (0 = always)"), 0, 60, &CUi::ms_LinearScrollbarScale, 0, "s");
+	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcAhSkipTeam, TCLocalize("Do not act inside a team (kill resets the team)"), &g_Config.m_TcAhSkipTeam, &Column, LineSize);
+
+	static CButtonContainer s_ReaderSwap, s_ClearSwap;
+	DoLine_KeyReader(Column, s_ReaderSwap, s_ClearSwap, TCLocalize("Swap strong/weak tee key"), "tc_ah_swap");
+	static CButtonContainer s_ReaderAhToggle, s_ClearAhToggle;
+	DoLine_KeyReader(Column, s_ReaderAhToggle, s_ClearAhToggle, TCLocalize("Toggle auto strong key"), "tc_ah_toggle");
+
+	{
+		Column.HSplitTop(LineSize, &Label, &Column);
+		const char *pStatus = TCLocalize("Status: off");
+		ColorRGBA StatusColor(1.0f, 1.0f, 1.0f, 0.6f);
+		switch(GameClient()->m_Extras.StrongState())
+		{
+		case CExtras::STRONG_OK:
+			pStatus = TCLocalize("Status: correct tee is strong");
+			StatusColor = ColorRGBA(0.3f, 0.85f, 0.45f, 1.0f);
+			break;
+		case CExtras::STRONG_WRONG:
+			pStatus = TCLocalize("Status: wrong tee is strong");
+			StatusColor = ColorRGBA(0.95f, 0.45f, 0.35f, 1.0f);
+			break;
+		case CExtras::STRONG_UNKNOWN:
+			pStatus = TCLocalize("Status: waiting for both tees");
+			break;
+		default:
+			break;
+		}
+		TextRender()->TextColor(StatusColor);
+		Ui()->DoLabel(&Label, pStatus, FontSize * 0.9f, TEXTALIGN_ML);
+		TextRender()->TextColor(TextRender()->DefaultTextColor());
+	}
+	s_SectionBoxes.back().h = Column.y - s_SectionBoxes.back().y;
+
+	// ***** Auto kill ***** //
+	Column.HSplitTop(MarginBetweenSections, nullptr, &Column);
+	s_SectionBoxes.push_back(Column);
+	Column.HSplitTop(HeadlineHeight, &Label, &Column);
+	Ui()->DoLabel(&Label, TCLocalize("Auto Kill on Freeze"), HeadlineFontSize, TEXTALIGN_ML);
+	Column.HSplitTop(MarginSmall, nullptr, &Column);
+
+	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcAkEnable, TCLocalize("Kill automatically when frozen"), &g_Config.m_TcAkEnable, &Column, LineSize);
+	Column.HSplitTop(LineSize, &Button, &Column);
+	if(g_Config.m_TcAkDelay == 0)
+		Ui()->DoScrollbarOption(&g_Config.m_TcAkDelay, &g_Config.m_TcAkDelay, &Button, TCLocalize("Kill delay"), 0, 10000, &CUi::ms_LinearScrollbarScale, CUi::SCROLLBAR_OPTION_NOCLAMPVALUE, "ms (instant)");
+	else
+		Ui()->DoScrollbarOption(&g_Config.m_TcAkDelay, &g_Config.m_TcAkDelay, &Button, TCLocalize("Kill delay"), 0, 10000, &CUi::ms_LinearScrollbarScale, CUi::SCROLLBAR_OPTION_NOCLAMPVALUE, "ms");
+	{
+		static std::vector<const char *> s_TargetNames;
+		s_TargetNames = {TCLocalize("Controlled tee", "Auto kill"), TCLocalize("Main tee", "Auto kill"), TCLocalize("Dummy", "Auto kill"), TCLocalize("Both tees", "Auto kill")};
+		static CUi::SDropDownState s_TargetState;
+		static CScrollRegion s_TargetScrollRegion;
+		s_TargetState.m_SelectionPopupContext.m_pScrollRegion = &s_TargetScrollRegion;
+		CUIRect DropDownRect;
+		Column.HSplitTop(MarginExtraSmall, nullptr, &Column);
+		Column.HSplitTop(LineSize, &DropDownRect, &Column);
+		DropDownRect.VSplitLeft(150.0f, &Label, &DropDownRect);
+		Ui()->DoLabel(&Label, TCLocalize("Applies to: "), FontSize, TEXTALIGN_ML);
+		g_Config.m_TcAkTarget = Ui()->DoDropDown(&DropDownRect, g_Config.m_TcAkTarget, s_TargetNames.data(), s_TargetNames.size(), s_TargetState);
+		Column.HSplitTop(MarginExtraSmall, nullptr, &Column);
+	}
+	static CButtonContainer s_ReaderAk, s_ClearAk;
+	DoLine_KeyReader(Column, s_ReaderAk, s_ClearAk, TCLocalize("Toggle auto kill key"), "tc_ak_toggle");
+	s_SectionBoxes.back().h = Column.y - s_SectionBoxes.back().y;
+
+	// ***** RightView ***** //
+	LeftView = Column;
+	Column = RightView;
+
+	// ***** Friend tracker ***** //
+	Column.HSplitTop(Margin, nullptr, &Column);
+	s_SectionBoxes.push_back(Column);
+	Column.HSplitTop(HeadlineHeight, &Label, &Column);
+	Ui()->DoLabel(&Label, TCLocalize("Friend Tracker"), HeadlineFontSize, TEXTALIGN_ML);
+	Column.HSplitTop(MarginSmall, nullptr, &Column);
+
+	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcFtEnable, TCLocalize("Notify when friends come online"), &g_Config.m_TcFtEnable, &Column, LineSize);
+	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcFtCurrent, TCLocalize("Friend joins my current server"), &g_Config.m_TcFtCurrent, &Column, LineSize);
+	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcFtGlobal, TCLocalize("Friend appears on any other server"), &g_Config.m_TcFtGlobal, &Column, LineSize);
+	Column.HSplitTop(LineSize, &Button, &Column);
+	Ui()->DoScrollbarOption(&g_Config.m_TcFtInterval, &g_Config.m_TcFtInterval, &Button, TCLocalize("Server list scan interval"), 30, 900, &CUi::ms_LinearScrollbarScale, CUi::SCROLLBAR_OPTION_NOCLAMPVALUE, "s");
+	Column.HSplitTop(LineSize, &Button, &Column);
+	Ui()->DoScrollbarOption(&g_Config.m_TcFtDuration, &g_Config.m_TcFtDuration, &Button, TCLocalize("Notification time"), 2, 20, &CUi::ms_LinearScrollbarScale, 0, "s");
+	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcFtSound, TCLocalize("Play sound"), &g_Config.m_TcFtSound, &Column, LineSize);
+	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcFtChat, TCLocalize("Also print in chat"), &g_Config.m_TcFtChat, &Column, LineSize);
+	DoButton_CheckBoxAutoVMarginAndSet(&g_Config.m_TcFtExisting, TCLocalize("Show friends already on server when I join"), &g_Config.m_TcFtExisting, &Column, LineSize);
+
+	Column.HSplitTop(LineSize, &Label, &Column);
+	Ui()->DoLabel(&Label, TCLocalize("Uses your friends list (add friends from the server browser or scoreboard)."), FontSize * 0.8f, TEXTALIGN_ML);
+	s_SectionBoxes.back().h = Column.y - s_SectionBoxes.back().y;
+
+	// ***** END OF PAGE ***** //
+	RightView = Column;
+
+	CUIRect ScrollRegion;
+	ScrollRegion.x = MainView.x;
+	ScrollRegion.y = std::max(LeftView.y, RightView.y) + MarginSmall * 2.0f;
+	ScrollRegion.w = MainView.w;
+	ScrollRegion.h = 0.0f;
+	s_ScrollRegion.AddRect(ScrollRegion);
 	s_ScrollRegion.End();
 }
