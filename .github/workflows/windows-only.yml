@@ -1,0 +1,52 @@
+name: Windows client (quick)
+
+# Builds only the Windows client (no tests, no server, no tools) and uploads it as an artifact.
+on:
+  push:
+    branches:
+      - extras-tab
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  windows-client:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v5
+      with:
+        submodules: recursive
+
+    - name: Install Vulkan SDK
+      uses: humbletim/install-vulkan-sdk@v1.2
+      with:
+        version: 1.3.296.0
+        cache: true
+
+    - name: Cache Rust dependencies
+      uses: Swatinem/rust-cache@v2.9.2
+      with:
+        cache-bin: false
+        workspaces: |
+          ./
+
+    - name: Configure
+      run: |
+        mkdir release
+        cd release
+        cmake -A x64 -DEXCEPTION_HANDLING=ON -DVULKAN=ON -DSERVER=OFF -DTOOLS=OFF -DVIDEORECORDER=OFF -DDOWNLOAD_GTEST=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE=. ..
+
+    - name: Build and package
+      run: |
+        cd release
+        cmake --build . --config Release --parallel --target package_default
+        mkdir artifacts
+        mv *-win64.zip artifacts
+
+    - name: Upload client
+      uses: actions/upload-artifact@v6
+      with:
+        name: tclient-windows
+        path: release/artifacts
