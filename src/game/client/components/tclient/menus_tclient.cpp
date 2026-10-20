@@ -3231,21 +3231,22 @@ void CMenus::RenderSettingsTClientExtras(CUIRect MainView)
 		EXTRAS_SUB_ANTIPING,
 		NUM_EXTRAS_SUBS
 	};
+	constexpr int NumSubs = NUM_EXTRAS_SUBS;
 	static int s_CurSub = EXTRAS_SUB_FEATURES;
-	static CButtonContainer s_aSubTabs[NUM_EXTRAS_SUBS] = {};
-	const char *apNames[NUM_EXTRAS_SUBS] = {TCLocalize("Features"), TCLocalize("Binds"), TCLocalize("Antiping")};
+	static CButtonContainer s_aSubTabs[NumSubs] = {};
+	const char *apNames[NumSubs] = {TCLocalize("Features"), TCLocalize("Binds"), TCLocalize("Antiping")};
 
 	CUIRect TabBar, Button;
 	MainView.HSplitTop(LineSize, &TabBar, &MainView);
 	TabBar.VSplitLeft(TabBar.w * 0.6f, &TabBar, nullptr); // keep the sub tabs compact
-	const float TabWidth = TabBar.w / NUM_EXTRAS_SUBS;
-	for(int Sub = 0; Sub < NUM_EXTRAS_SUBS; ++Sub)
+	const float TabWidth = TabBar.w / NumSubs;
+	for(int Sub = 0; Sub < NumSubs; ++Sub)
 	{
 		TabBar.VSplitLeft(TabWidth, &Button, &TabBar);
 		int Corners = IGraphics::CORNER_NONE;
 		if(Sub == 0)
 			Corners = IGraphics::CORNER_L;
-		else if(Sub == NUM_EXTRAS_SUBS - 1)
+		else if(Sub == NumSubs - 1)
 			Corners = IGraphics::CORNER_R;
 		if(DoButton_MenuTab(&s_aSubTabs[Sub], apNames[Sub], s_CurSub == Sub, &Button, Corners, nullptr, nullptr, nullptr, nullptr, 4.0f))
 			s_CurSub = Sub;
